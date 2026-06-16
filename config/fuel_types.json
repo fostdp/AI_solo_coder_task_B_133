@@ -1,0 +1,77 @@
+{
+  "_comment": "燃料类型热力学数据库 - 定义5种历史燃料的燃烧和烟气参数",
+  "fuel_types": {
+    "animal_fat": {
+      "name": "动物脂肪",
+      "heating_value_mjkg": 37.5,
+      "density_gcm3": 0.92,
+      "smoke_particle_density_kgm3": 2200.0,
+      "co2_emission_factor_kgkg": 2.85,
+      "h2o_emission_factor_kgkg": 1.15,
+      "soot_emission_factor_kgkg": 0.0068,
+      "molar_mass_flue_gas_gmol": 29.1,
+      "combustion_efficiency": 0.88,
+      "modbus_value": 1,
+      "temp_factor": 1.0
+    },
+    "sesame_oil": {
+      "name": "麻油",
+      "heating_value_mjkg": 39.3,
+      "density_gcm3": 0.92,
+      "smoke_particle_density_kgm3": 2100.0,
+      "co2_emission_factor_kgkg": 2.98,
+      "h2o_emission_factor_kgkg": 1.22,
+      "soot_emission_factor_kgkg": 0.0055,
+      "molar_mass_flue_gas_gmol": 29.3,
+      "combustion_efficiency": 0.90,
+      "modbus_value": 2,
+      "temp_factor": 1.03
+    },
+    "beeswax": {
+      "name": "蜜蜡",
+      "heating_value_mjkg": 40.6,
+      "density_gcm3": 0.96,
+      "smoke_particle_density_kgm3": 2000.0,
+      "co2_emission_factor_kgkg": 3.12,
+      "h2o_emission_factor_kgkg": 1.35,
+      "soot_emission_factor_kgkg": 0.0042,
+      "molar_mass_flue_gas_gmol": 29.5,
+      "combustion_efficiency": 0.92,
+      "modbus_value": 3,
+      "temp_factor": 1.05
+    },
+    "mineral_oil": {
+      "name": "矿物油",
+      "heating_value_mjkg": 44.0,
+      "density_gcm3": 0.85,
+      "smoke_particle_density_kgm3": 2400.0,
+      "co2_emission_factor_kgkg": 3.20,
+      "h2o_emission_factor_kgkg": 1.45,
+      "soot_emission_factor_kgkg": 0.0085,
+      "molar_mass_flue_gas_gmol": 30.2,
+      "combustion_efficiency": 0.85,
+      "modbus_value": 4,
+      "temp_factor": 1.12
+    },
+    "tallow": {
+      "name": "牛油",
+      "heating_value_mjkg": 39.0,
+      "density_gcm3": 0.90,
+      "smoke_particle_density_kgm3": 2150.0,
+      "co2_emission_factor_kgkg": 2.92,
+      "h2o_emission_factor_kgkg": 1.18,
+      "soot_emission_factor_kgkg": 0.0060,
+      "molar_mass_flue_gas_gmol": 29.2,
+      "combustion_efficiency": 0.89,
+      "modbus_value": 5,
+      "temp_factor": 1.02
+    }
+  },
+  "modbus_mapping": {
+    "1": "animal_fat",
+    "2": "sesame_oil",
+    "3": "beeswax",
+    "4": "mineral_oil",
+    "5": "tallow"
+  }
+}
