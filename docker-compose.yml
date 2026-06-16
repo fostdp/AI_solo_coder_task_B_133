@@ -1,0 +1,193 @@
+# ============================================
+# 长信宫灯烟道流体仿真与室内空气质量分析系统
+# Docker Compose 编排文件
+# ============================================
+# 服务清单：
+#   1. timescaledb  - 时序数据库（超表 + 降采样 + 保留策略）
+#   2. redis        - 消息总线（Pub/Sub）
+#   3. mqtt         - Mosquitto MQTT Broker（告警推送）
+#   4. api          - FastAPI 后端（gunicorn + uvicorn workers）
+#   5. simulator    - 宫灯 Modbus TCP 传感器模拟器
+# ============================================
+
+services:
+  # ============================================
+  # 1. TimescaleDB 时序数据库
+  # ============================================
+  timescaledb:
+    image: timescale/timescaledb:2.13.0-pg16
+    container_name: gongdeng-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-changxin_gongdeng}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      TIMESCALEDB_TELEMETRY: "off"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+      - ./database/timescale_policy.sql:/docker-entrypoint-initdb.d/002-policy.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-changxin_gongdeng}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - gongdeng-net
+
+  # ============================================
+  # 2. Redis 消息总线
+  # ============================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: gongdeng-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfilename "appendonly.aof"
+      --save 60 100
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - gongdeng-net
+
+  # ============================================
+  # 3. Mosquitto MQTT Broker
+  # ============================================
+  mqtt:
+    image: eclipse-mosquitto:2.0.18
+    container_name: gongdeng-mqtt
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-9001}:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt_data:/mosquitto/data
+      - mqtt_log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 -W 2 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gongdeng-net
+
+  # ============================================
+  # 4. FastAPI 后端 API
+  # ============================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gongdeng-api
+    restart: unless-stopped
+    environment:
+      # 数据库
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@timescaledb:5432/${POSTGRES_DB:-changxin_gongdeng}
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+      # MQTT
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      MQTT_TOPIC_PREFIX: ${MQTT_TOPIC_PREFIX:-gongdeng}
+      # 告警阈值
+      PM25_THRESHOLD_WARNING: ${PM25_THRESHOLD_WARNING:-75.0}
+      PM25_THRESHOLD_CRITICAL: ${PM25_THRESHOLD_CRITICAL:-150.0}
+      FLUE_VELOCITY_MIN: ${FLUE_VELOCITY_MIN:-0.1}
+      FLUE_TEMPERATURE_MAX: ${FLUE_TEMPERATURE_MAX:-200.0}
+      # 默认燃料类型
+      DEFAULT_FUEL_TYPE: ${DEFAULT_FUEL_TYPE:-animal_fat}
+      # 应用
+      PORT: 8000
+      DEBUG: ${DEBUG:-false}
+      APP_NAME: "长信宫灯烟道流体仿真系统"
+      # Gunicorn
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-4}
+      GUNICORN_TIMEOUT: 120
+      GUNICORN_LOG_LEVEL: info
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config:ro
+    networks:
+      - gongdeng-net
+
+  # ============================================
+  # 5. 宫灯传感器模拟器
+  # ============================================
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulator
+    container_name: gongdeng-simulator
+    restart: unless-stopped
+    environment:
+      # 目标 API
+      API_URL: http://api:8000
+      # 模拟器配置
+      LAMP_ID: ${SIMULATOR_LAMP_ID:-1}
+      MODBUS_HOST: 0.0.0.0
+      MODBUS_PORT: 502
+      ENABLE_MODBUS: ${SIMULATOR_ENABLE_MODBUS:-true}
+      ENABLE_HTTP: ${SIMULATOR_ENABLE_HTTP:-true}
+      # 可配置的实验参数
+      FUEL_TYPE: ${SIMULATOR_FUEL_TYPE:-animal_fat}
+      AIR_CHANGE_RATE: ${SIMULATOR_AIR_CHANGE_RATE:-1.0}
+      OUTDOOR_PM25: ${SIMULATOR_OUTDOOR_PM25:-25.0}
+      # 异常注入
+      INJECT_ANOMALIES: ${SIMULATOR_INJECT_ANOMALIES:-true}
+      REPORT_INTERVAL: ${SIMULATOR_REPORT_INTERVAL:-60}
+    ports:
+      - "${MODBUS_PORT:-502}:502"
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - gongdeng-net
+
+# ============================================
+# 网络
+# ============================================
+networks:
+  gongdeng-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ============================================
+# 数据卷
+# ============================================
+volumes:
+  timescaledb_data:
+    name: gongdeng-timescaledb-data
+  redis_data:
+    name: gongdeng-redis-data
+  mqtt_data:
+    name: gongdeng-mqtt-data
+  mqtt_log:
+    name: gongdeng-mqtt-log
