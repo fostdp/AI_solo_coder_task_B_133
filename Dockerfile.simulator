@@ -1,0 +1,55 @@
+# ============================================
+# 宫灯传感器模拟器 Dockerfile
+# ============================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r simuser \
+    && useradd -r -g simuser simuser
+
+# 升级 pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# 安装 Python 依赖
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制配置文件
+COPY config/ /app/config/
+
+# 复制模拟器代码
+COPY simulator/ /app/simulator/
+
+# 修正权限
+RUN chown -R simuser:simuser /app
+USER simuser
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://${API_HOST:-api}:${API_PORT:-8000}/health || exit 1
+
+# 暴露 Modbus TCP 端口
+EXPOSE 502
+
+# 环境变量（可被 docker-compose 覆盖）
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    LAMP_ID=1 \
+    MODBUS_HOST=0.0.0.0 \
+    MODBUS_PORT=502 \
+    API_URL=http://api:8000 \
+    ENABLE_MODBUS=true \
+    ENABLE_HTTP=true \
+    FUEL_TYPE=animal_fat \
+    AIR_CHANGE_RATE=1.0 \
+    OUTDOOR_PM25=25.0 \
+    INJECT_ANOMALIES=true \
+    REPORT_INTERVAL=60
+
+# 启动命令
+CMD ["python", "simulator/gongdeng_simulator.py"]
