@@ -1,0 +1,78 @@
+{
+  "_comment": "空气质量扩散与净化评估参数 - 房间几何、扩散模型、通风、净化模型",
+  "room_geometry": {
+    "room_size_x_m": 10.0,
+    "room_size_y_m": 8.0,
+    "room_size_z_m": 3.5,
+    "lamp_position_x_m": 5.0,
+    "lamp_position_y_m": 4.0,
+    "lamp_position_z_m": 1.8
+  },
+  "grid_resolution": {
+    "nx": 5,
+    "ny": 5,
+    "nz": 5,
+    "min_practical_resolution": 3,
+    "max_practical_resolution": 15
+  },
+  "diffusion_model": {
+    "base_diffusion_coefficient_m2s": 2.0e-6,
+    "reference_temperature_k": 293.15,
+    "temperature_exponent": 1.75,
+    "humidity_correction_coefficient": 0.002,
+    "humidity_reference_percent": 50.0,
+    "numerical_diffusion_steps": 5,
+    "dt_s": 1.0,
+    "stability_courant_number_max": 0.5
+  },
+  "ventilation": {
+    "default_air_change_rate_ach": 1.0,
+    "default_outdoor_pm25_ugm3": 25.0,
+    "inlet_position": {
+      "x_ratio": 0.1,
+      "y_ratio": 0.5,
+      "z_ratio": 0.9
+    },
+    "outlet_position": {
+      "x_ratio": 0.9,
+      "y_ratio": 0.5,
+      "z_ratio": 0.9
+    },
+    "inlet_velocity_weight": 0.6,
+    "outlet_velocity_weight": 0.4,
+    "inlet_gaussian_sigma": 0.8,
+    "max_velocity_magnitude_ms": 0.3
+  },
+  "purification_model": {
+    "base_purification_efficiency": 0.55,
+    "settling_weight": 0.7,
+    "velocity_weight": 0.3,
+    "min_settling_threshold": 0.3,
+    "min_velocity_threshold_ms": 0.1,
+    "local_purification_radius_m": 2.5,
+    "local_purification_strength": 0.85,
+    "decay_exponent": 2.0
+  },
+  "emission_model": {
+    "base_emission_rate_ug_per_kg_oil": 6800.0,
+    "emission_temperature_correction_coefficient": 0.001,
+    "emission_temperature_reference_c": 100.0,
+    "lamp_gaussian_sigma": 1.5,
+    "lamp_source_strength": 3.5
+  },
+  "aqi_thresholds": {
+    "excellent_max": 35.0,
+    "good_max": 75.0,
+    "light_pollution_max": 115.0,
+    "moderate_pollution_max": 150.0,
+    "heavy_pollution_max": 250.0
+  },
+  "alert_thresholds": {
+    "pm25_warning_ugm3": 75.0,
+    "pm25_critical_ugm3": 150.0,
+    "flue_velocity_warning_ms": 0.1,
+    "flue_velocity_critical_ms": 0.05,
+    "flue_temperature_warning_c": 200.0,
+    "flue_temperature_critical_c": 250.0
+  }
+}
