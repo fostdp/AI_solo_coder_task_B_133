@@ -1,0 +1,60 @@
+{
+  "_comment": "烟道流体仿真(CFD)参数配置 - 烟道几何、流体计算、传热系数、粒子参数",
+  "flue_geometry": {
+    "flue_length_m": 0.8,
+    "flue_diameter_m": 0.05,
+    "flue_wall_thickness_m": 0.002,
+    "flue_inclination_deg": 0.0,
+    "bend_count": 1,
+    "bend_angle_deg": 45.0
+  },
+  "fluid_properties": {
+    "reference_temperature_k": 273.15,
+    "air_molar_mass_gmol": 28.97,
+    "universal_gas_constant_jkmol": 8314.46,
+    "standard_atmosphere_pa": 101325.0,
+    "sutherland_constant_c_k": 110.4,
+    "sutherland_reference_temperature_k": 273.15,
+    "sutherland_reference_viscosity_pas": 1.716e-5,
+    "thermal_expansion_coefficient_ideal_gas_inv": 293.15
+  },
+  "heat_transfer": {
+    "wall_thermal_conductivity_wmk": 205.0,
+    "natural_convection_coefficient_ambient_wm2k": 5.0,
+    "radiation_emissivity": 0.75,
+    "stefan_boltzmann_constant_wm2k4": 5.67e-8,
+    "nusselt_laminar_forced_constant": 3.66,
+    "nusselt_turbulent_dittus_boelter_coeff": 0.023,
+    "dittus_boelter_exponent_heating": 0.4,
+    "dittus_boelter_exponent_cooling": 0.3,
+    "nusselt_natural_laminar_coeff": 0.59,
+    "nusselt_natural_turbulent_coeff": 0.10,
+    "nusselt_natural_laminar_rayleigh_max": 1e9,
+    "critical_reynolds_lower": 2300.0,
+    "critical_reynolds_upper": 4000.0,
+    "prandtl_number_air_reference": 0.71
+  },
+  "pressure_loss": {
+    "darcy_friction_laminar_constant": 64.0,
+    "turbulent_colebrook_roughness_mm": 0.045,
+    "turbulent_colebrook_iterations": 50,
+    "turbulent_colebrook_tolerance": 1e-6,
+    "bend_loss_coefficient_90deg": 0.9,
+    "entrance_loss_coefficient": 0.5,
+    "exit_loss_coefficient": 1.0
+  },
+  "particle_settling": {
+    "reference_particle_diameter_um": 2.5,
+    "settling_efficiency_cooling_weight": 0.4,
+    "settling_efficiency_time_weight": 0.6,
+    "settling_max_residence_time_s": 5.0,
+    "settling_min_efficiency_floor": 0.05
+  },
+  "trajectory_simulation": {
+    "default_dt_s": 0.005,
+    "default_num_steps": 300,
+    "inlet_perturbation_radius_m": 0.02,
+    "particle_stokes_diameter_m": 2.5e-6,
+    "particle_initial_velocity_factor": 0.8
+  }
+}
