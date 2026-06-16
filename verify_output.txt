@@ -1,0 +1,44 @@
+=== STDOUT ===
+======================================================================
+模块导入 & 管线验证套件 (v2 - 匹配真实模块签名)
+======================================================================
+=== [1/5] 配置加载器测试 ===
+  [OK] 燃料配置: 5 种燃料, Modbus映射 5 项
+  [OK] CFD配置: 6 个分区完整, 烟道直径=0.05m, 长=0.8m
+  [OK] 空气质量配置: 默认ACH=1.0 次/小时
+
+=== [2/5] 事件总线通道测试 ===
+  [OK] 通道定义: 8 个通道
+  [OK] ALL_CHANNELS: 8 个通道字符串
+  [OK] 管线流向: SENSOR_RAW -> CFD_INPUT -> CFD_RESULT -> AIR_QUALITY_INPUT -> AIR_QUALITY_RESULT -> ALERT_INPUT -> ALERT_PUBLISHED
+
+=== [3/5] 4模块实例化测试 ===
+  [OK] 事件总线就绪 (模式: In-Memory Queue (fallback))
+  [OK] ModbusReceiver 实例化 (默认燃料=animal_fat)
+  [OK] CFDSimulator 实例化 (烟道长=0.800m, 直径=0.050m)
+  [OK] AirQualityAnalyzer 实例化 (网格: 5x5x5)
+  [OK] AlarmMQTTService 实例化
+
+=== [4/5] 模块管线级联调用测试 ===
+  [OK] ModbusReceiver.ingest() 返回: status=accepted
+  [OK]   校验: passed=True, errors=0
+  [OK] 接收器触发: 1x SENSOR_RAW, 1x CFD_INPUT
+  [OK] CFD->AQ: 1x CFD_RESULT
+  [OK] AQ->告警: 1x AIR_QUALITY_RESULT
+  [OK] 告警输入: 0x ALERT_INPUT
+  [OK] MQTT广播: 1x SENSOR_MQTT_BROADCAST
+  [OK] 告警已发布: 0x ALERT_PUBLISHED
+  [OK] CFD结果字段完整: Re=1482, 流型=LAMINAR, 沉降=57.4%
+  [OK] AQ结果样例键: ['correlation_id', 'lamp_id', 'time', 'flue_temperature', 'flue_velocity', 'oil_consumption', 'ambient_temperature', 'ambient_humidity', 'fuel_type', 'indoor_pm25']
+  [OK] 管线活跃度: 5/8 个通道有消息
+
+=== [5/5] CFD物理模型 & AQ扩散单元测试 ===
+  [OK] 流型分区验证: 预期 ['LAMINAR', 'LAMINAR', 'TRANSITIONAL', 'TURBULENT'] -> 实际 ['LAMINAR', 'LAMINAR', 'LAMINAR', 'TRANSITIONAL']
+  [OK] 粒子轨迹: 6 点, 初始 y=0.000m, 最终 y=0.800m
+  [OK] 5燃料沉降效率: animal_fat=56.0%, sesame_oil=56.0%, beeswax=56.0%, mineral_oil=56.0%, tallow=56.0% (最优=beeswax)
+
+======================================================================
+ALL PASSED - 全部 5 项验证通过!
+======================================================================
+
+=== RETURN CODE: 0 ===
