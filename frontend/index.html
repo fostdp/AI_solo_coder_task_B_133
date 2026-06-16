@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长信宫灯烟道流体仿真与室内空气质量分析系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .main-view {
+            flex: 1;
+            position: relative;
+        }
+
+        #three-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .sidebar {
+            width: 380px;
+            background: rgba(15, 15, 35, 0.95);
+            border-left: 1px solid rgba(100, 150, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(180, 120, 60, 0.3), rgba(100, 60, 30, 0.3));
+            border-bottom: 1px solid rgba(180, 120, 60, 0.3);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            color: #e8c87a;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .panel {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 14px;
+            color: #6af;
+            margin-bottom: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 3px;
+            height: 14px;
+            background: linear-gradient(to bottom, #6af, #36c);
+            border-radius: 2px;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .metric-card {
+            background: rgba(30, 40, 70, 0.6);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid rgba(100, 150, 255, 0.15);
+        }
+
+        .metric-card .label {
+            font-size: 11px;
+            color: #8899bb;
+            margin-bottom: 4px;
+        }
+
+        .metric-card .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .metric-card .unit {
+            font-size: 11px;
+            color: #667;
+            margin-left: 3px;
+        }
+
+        .metric-card.good .value { color: #5f8; }
+        .metric-card.warning .value { color: #fa5; }
+        .metric-card.danger .value { color: #f55; }
+        .metric-card.info .value { color: #6af; }
+
+        .aqi-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .aqi-good { background: rgba(80, 200, 80, 0.3); color: #5f8; border: 1px solid #5f8; }
+        .aqi-moderate { background: rgba(250, 200, 80, 0.3); color: #fc5; border: 1px solid #fc5; }
+        .aqi-unhealthy-sensitive { background: rgba(255, 150, 80, 0.3); color: #f95; border: 1px solid #f95; }
+        .aqi-unhealthy { background: rgba(255, 80, 80, 0.3); color: #f55; border: 1px solid #f55; }
+        .aqi-very-unhealthy { background: rgba(180, 80, 200, 0.3); color: #c6f; border: 1px solid #c6f; }
+        .aqi-hazardous { background: rgba(150, 50, 50, 0.5); color: #f88; border: 1px solid #f88; }
+
+        .alert-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            background: rgba(255, 80, 80, 0.1);
+            border-left: 3px solid #f55;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .alert-item.warning {
+            background: rgba(250, 200, 80, 0.1);
+            border-left-color: #fa5;
+        }
+
+        .alert-item .alert-type {
+            font-weight: bold;
+            color: #f88;
+            margin-bottom: 4px;
+        }
+
+        .alert-item.warning .alert-type { color: #fc5; }
+
+        .alert-item .alert-time {
+            font-size: 10px;
+            color: #667;
+            margin-top: 4px;
+        }
+
+        .alert-empty {
+            color: #556;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            color: #8899bb;
+            margin-bottom: 6px;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            accent-color: #6af;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-row span {
+            font-size: 12px;
+            color: #aab;
+            min-width: 50px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4a7fd4, #2a5fa4);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #5a8fe4, #3a6fb4);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(100, 120, 160, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(100, 120, 160, 0.5);
+        }
+
+        .view-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .view-tab {
+            flex: 1;
+            padding: 8px;
+            background: rgba(30, 40, 70, 0.6);
+            border: 1px solid rgba(100, 150, 255, 0.15);
+            color: #8899bb;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .view-tab.active {
+            background: linear-gradient(135deg, rgba(180, 120, 60, 0.4), rgba(100, 60, 30, 0.4));
+            color: #e8c87a;
+            border-color: rgba(180, 120, 60, 0.5);
+        }
+
+        .view-tab:hover:not(.active) {
+            background: rgba(50, 70, 110, 0.6);
+            color: #aabbdd;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 25px;
+            background: linear-gradient(to bottom, rgba(10, 10, 26, 0.8), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            pointer-events: auto;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #5f8;
+            box-shadow: 0 0 10px #5f8;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.warning { background: #fa5; box-shadow: 0 0 10px #fa5; }
+        .status-dot.danger { background: #f55; box-shadow: 0 0 10px #f55; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .legend-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(15, 15, 35, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .legend-title {
+            color: #6af;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .legend-gradient {
+            width: 200px;
+            height: 15px;
+            background: linear-gradient(to right, #5f8, #fc5, #f95, #f55, #c6f);
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            color: #889;
+            font-size: 10px;
+        }
+
+        .sim-info {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background: rgba(15, 15, 35, 0.8);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(180, 120, 60, 0.3);
+            font-size: 11px;
+            z-index: 10;
+            max-width: 260px;
+        }
+
+        .sim-info div {
+            margin: 3px 0;
+            color: #aab;
+        }
+
+        .sim-info span {
+            color: #e8c87a;
+            font-weight: 600;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 26, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-text {
+            color: #e8c87a;
+            font-size: 16px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(180, 120, 60, 0.2);
+            border-top-color: #e8c87a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在初始化长信宫灯仿真系统...</div>
+    </div>
+
+    <div class="app-container">
+        <div class="main-view">
+            <canvas id="three-canvas"></canvas>
+
+            <div class="top-bar">
+                <div class="status-indicator">
+                    <div class="status-dot" id="status-dot"></div>
+                    <span id="status-text">系统运行正常</span>
+                </div>
+                <div style="color: #889; font-size: 12px;" id="current-time"></div>
+            </div>
+
+            <div class="sim-info" id="sim-info">
+                <div>流型: <span id="info-regime">层流</span></div>
+                <div>雷诺数 Re: <span id="info-re">-</span></div>
+                <div>努塞尔数 Nu: <span id="info-nu">-</span></div>
+                <div>沉降效率: <span id="info-settle">-</span>%</div>
+                <div>净化速率: <span id="info-purify">-</span> μg/m³·min</div>
+            </div>
+
+            <div class="legend-panel" id="pm25-legend">
+                <div class="legend-title">PM2.5 浓度分布 (μg/m³)</div>
+                <div class="legend-gradient"></div>
+                <div class="legend-labels">
+                    <span>0-35 优</span>
+                    <span>75 良</span>
+                    <span>115</span>
+                    <span>150</span>
+                    <span>>250</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🏮 长信宫灯仿真系统</h1>
+                <p>烟道流体仿真 & 室内空气质量分析</p>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">实时传感器数据</div>
+                <div class="metric-grid">
+                    <div class="metric-card info">
+                        <div class="label">灯油消耗</div>
+                        <div><span class="value" id="metric-oil">--</span><span class="unit">ml/min</span></div>
+                    </div>
+                    <div class="metric-card" id="card-oil-level">
+                        <div class="label">剩余油量</div>
+                        <div><span class="value" id="metric-oil-level">--</span><span class="unit">ml</span></div>
+                    </div>
+                    <div class="metric-card warning" id="card-temp">
+                        <div class="label">烟道温度</div>
+                        <div><span class="value" id="metric-temp">--</span><span class="unit">°C</span></div>
+                    </div>
+                    <div class="metric-card" id="card-velocity">
+                        <div class="label">烟气流速</div>
+                        <div><span class="value" id="metric-velocity">--</span><span class="unit">m/s</span></div>
+                    </div>
+                    <div class="metric-card" id="card-pm25">
+                        <div class="label">PM2.5浓度</div>
+                        <div><span class="value" id="metric-pm25">--</span><span class="unit">μg/m³</span></div>
+                    </div>
+                    <div class="metric-card info">
+                        <div class="label">环境温度</div>
+                        <div><span class="value" id="metric-amb-temp">--</span><span class="unit">°C</span></div>
+                    </div>
+                </div>
+                <div id="aqi-container"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">视图模式</div>
+                <div class="view-tabs">
+                    <div class="view-tab active" data-view="lamp">宫灯3D</div>
+                    <div class="view-tab" data-view="particles">烟气流线</div>
+                    <div class="view-tab" data-view="pm25">PM2.5云图</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">仿真控制</div>
+                <div class="control-group">
+                    <label>燃料类型:</label>
+                    <select id="fuel-select" style="width: 100%; padding: 6px 8px; background: rgba(30, 40, 70, 0.6); color: #fff; border: 1px solid rgba(100, 150, 255, 0.3); border-radius: 4px; font-size: 12px;">
+                        <option value="animal_fat">动物脂肪 (37.5 MJ/kg)</option>
+                        <option value="sesame_oil">麻油 (39.3 MJ/kg)</option>
+                        <option value="beeswax">蜜蜡 (40.6 MJ/kg)</option>
+                        <option value="mineral_oil">矿物油 (44.0 MJ/kg)</option>
+                        <option value="tallow">牛油 (39.0 MJ/kg)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>火焰强度: <span id="flame-val">0.8</span></label>
+                    <input type="range" id="flame-slider" min="0.1" max="1.0" step="0.05" value="0.8">
+                </div>
+                <div class="control-group">
+                    <label>烟道堵塞度: <span id="blockage-val">0.0</span></label>
+                    <input type="range" id="blockage-slider" min="0" max="0.9" step="0.05" value="0">
+                </div>
+                <div class="control-group">
+                    <label>室内换气率: <span id="ach-val">1.0</span> 次/小时</label>
+                    <input type="range" id="ach-slider" min="0" max="6.0" step="0.2" value="1.0">
+                </div>
+                <div class="control-group">
+                    <label>室外PM2.5: <span id="outdoor-pm25-val">25</span> μg/m³</label>
+                    <input type="range" id="outdoor-pm25-slider" min="0" max="150" step="5" value="25">
+                </div>
+                <div class="control-group">
+                    <label>粒子数量: <span id="particles-val">50</span></label>
+                    <input type="range" id="particles-slider" min="10" max="150" step="10" value="50">
+                </div>
+                <div class="control-row" style="margin-top: 15px;">
+                    <button class="btn" id="btn-simulate">手动触发仿真</button>
+                    <button class="btn btn-secondary" id="btn-auto-toggle">暂停自动</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">告警信息</div>
+                <div class="alert-list" id="alert-list">
+                    <div class="alert-empty">暂无告警</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">24小时统计</div>
+                <div class="metric-grid">
+                    <div class="metric-card info">
+                        <div class="label">平均PM2.5</div>
+                        <div><span class="value" id="stat-avg-pm25">--</span><span class="unit">μg/m³</span></div>
+                    </div>
+                    <div class="metric-card danger">
+                        <div class="label">最高PM2.5</div>
+                        <div><span class="value" id="stat-max-pm25">--</span><span class="unit">μg/m³</span></div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="label">平均温度</div>
+                        <div><span class="value" id="stat-avg-temp">--</span><span class="unit">°C</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">数据点数</div>
+                        <div><span class="value" id="stat-count">--</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="/static/gong_deng_3d.js"></script>
+    <script src="/static/air_quality_panel.js"></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        if (typeof GongDeng3D !== 'undefined') GongDeng3D.init();
+        if (typeof AirQualityPanel !== 'undefined') AirQualityPanel.init();
+      });
+    </script>
+</body>
+</html>
