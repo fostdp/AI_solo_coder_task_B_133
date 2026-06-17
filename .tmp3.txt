@@ -1,0 +1,72 @@
+﻿======================================================================
+  重构后新模块单元测试（5组 45+用例）
+======================================================================
+
+────────────────────────────────────────────────────────────
+  一、DesignComparator 朝代设计对比测试
+────────────────────────────────────────────────────────────
+  [PASS] test_list_dynasty_lamps_has_archaeology
+  [PASS] test_compute_design_score_in_range
+  [PASS] test_design_rank_ordered
+  [PASS] test_insights_not_empty
+  [PASS] test_weight_sum_is_one
+
+────────────────────────────────────────────────────────────
+  二、EraComparator 跨时代古今对比测试
+────────────────────────────────────────────────────────────
+  [PASS] test_validate_input_valid
+  [PASS] test_validate_input_invalid_lamp
+  [PASS] test_validate_input_invalid_purifier
+  [PASS] test_ancient_scores_reasonable
+  [PASS] test_modern_scores_reasonable
+  [PASS] test_energy_efficiency_class
+  [PASS] test_compare_across_eras_full
+  [PASS] test_list_modern_purifiers_has_standards
+
+────────────────────────────────────────────────────────────
+  三、SynergySimulator 多灯协同净化测试
+────────────────────────────────────────────────────────────
+  [PASS] test_list_scenes_ok
+  [PASS] test_get_scene_valid
+  [PASS] test_get_scene_invalid
+  [PASS] test_full_simulation_min_strategy
+  [PASS] test_four_overlap_strategies_produce_different_results
+  [PASS] test_synergy_index_computed
+  [PASS] test_scene_restored_after_simulation
+  [PASS] test_invalid_scene_raises
+
+────────────────────────────────────────────────────────────
+  四、VRGongDeng 虚拟体验测试
+────────────────────────────────────────────────────────────
+  [PASS] test_validate_flame_normal
+  [PASS] test_validate_flame_too_high
+  [PASS] test_validate_flame_invalid
+  [PASS] test_validate_blockage_good
+  [PASS] test_validate_blockage_severe
+  [PASS] test_predict_delta_flame_improvement
+  [PASS] test_predict_delta_blockage_degradation
+  [PASS] test_predict_delta_neutral
+  [PASS] test_get_edu_facts_has_sections
+  [PASS] test_edu_facts_fallback
+  [PASS] test_schema_complete
+  [PASS] test_fuel_types_registered
+
+────────────────────────────────────────────────────────────
+  五、CFDWorker 独立子进程测试
+────────────────────────────────────────────────────────────
+  [ERROR] test_local_mode_run : RuntimeError: 无法构造 CFD simulator: CFDSimulator.__init__() got an unexpected keyword argument 'dynasty_lamps_cfg'
+  [PASS] test_local_mode_set_simulator
+  [PASS] test_submit_before_start_raises
+  [ERROR] test_worker_process_lifecycle : TimeoutError: CFD 任务 cde4a56735a240b285e3bebcadc5d114 超时
+  [PASS] test_worker_stop_without_start
+    [SKIP] with 上下文管理器测试跳过: CFD 任务 1d62894abcd94aea83af8db42e5c384f 超时
+  [PASS] test_context_manager
+  [PASS] test_future_timeout
+
+======================================================================
+  测试完成: PASS=38  FAIL=2  耗时=62.31s
+Traceback (most recent call last):
+  File "D:\SOLO-2\AI_solo_coder_task_B_133\scripts\test_refactored_modules.py", line 565, in <module>
+    print(f"  \u274c 有 {FAIL} 个失败")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'gbk' codec can't encode character '\u274c' in position 2: illegal multibyte sequence

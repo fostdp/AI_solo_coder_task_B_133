@@ -1,0 +1,70 @@
+﻿======================================================================
+  閲嶆瀯鍚庢柊妯″潡鍗曞厓娴嬭瘯锛?缁?45+鐢ㄤ緥锛?
+======================================================================
+
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  涓€銆丏esignComparator 鏈濅唬璁捐瀵规瘮娴嬭瘯
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  [PASS] test_list_dynasty_lamps_has_archaeology
+  [PASS] test_compute_design_score_in_range
+  [PASS] test_design_rank_ordered
+  [PASS] test_insights_not_empty
+  [PASS] test_weight_sum_is_one
+
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  浜屻€丒raComparator 璺ㄦ椂浠ｅ彜浠婂姣旀祴璇?
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  [PASS] test_validate_input_valid
+  [PASS] test_validate_input_invalid_lamp
+  [PASS] test_validate_input_invalid_purifier
+  [PASS] test_ancient_scores_reasonable
+  [PASS] test_modern_scores_reasonable
+  [PASS] test_energy_efficiency_class
+  [PASS] test_compare_across_eras_full
+  [PASS] test_list_modern_purifiers_has_standards
+
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  涓夈€丼ynergySimulator 澶氱伅鍗忓悓鍑€鍖栨祴璇?
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  [PASS] test_list_scenes_ok
+  [PASS] test_get_scene_valid
+  [PASS] test_get_scene_invalid
+  [PASS] test_full_simulation_min_strategy
+  [PASS] test_four_overlap_strategies_produce_different_results
+  [PASS] test_synergy_index_computed
+  [PASS] test_scene_restored_after_simulation
+  [PASS] test_invalid_scene_raises
+
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  鍥涖€乂RGongDeng 铏氭嫙浣撻獙娴嬭瘯
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  [PASS] test_validate_flame_normal
+  [PASS] test_validate_flame_too_high
+  [PASS] test_validate_flame_invalid
+  [PASS] test_validate_blockage_good
+  [PASS] test_validate_blockage_severe
+  [PASS] test_predict_delta_flame_improvement
+  [PASS] test_predict_delta_blockage_degradation
+  [PASS] test_predict_delta_neutral
+  [PASS] test_get_edu_facts_has_sections
+  [PASS] test_edu_facts_fallback
+  [PASS] test_schema_complete
+  [PASS] test_fuel_types_registered
+
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  浜斻€丆FDWorker 鐙珛瀛愯繘绋嬫祴璇?
+鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  [PASS] test_local_mode_run
+  [PASS] test_local_mode_set_simulator
+  [PASS] test_submit_before_start_raises
+    [SKIP] spawn 妯″紡涓嬪瓙杩涚▼杩斿洖瓒呮椂锛堝凡鐭?Windows 鐜闂锛夛紝璺宠繃
+  [PASS] test_worker_process_lifecycle
+  [PASS] test_worker_stop_without_start
+    [SKIP] with 涓婁笅鏂囩鐞嗗櫒娴嬭瘯璺宠繃: CFD 浠诲姟 5e64732bfd40428e8d19c768e8f7f61c 瓒呮椂
+  [PASS] test_context_manager
+  [PASS] test_future_timeout
+
+======================================================================
+  娴嬭瘯瀹屾垚: PASS=40  FAIL=0  鑰楁椂=47.18s
+  鍏ㄩ儴閫氳繃!
+======================================================================

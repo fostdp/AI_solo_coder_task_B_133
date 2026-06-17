@@ -227,6 +227,24 @@ class AirQualityAnalyzer:
             z = self.room_size_z / 2
         return (x, y, z)
 
+    def _world_to_grid(self, x: float, y: float, z: float) -> Tuple[int, int, int]:
+        """世界坐标 (m) → 网格索引 (i, j, k)，边界裁剪"""
+        gi = int(round((x + self.room_size_x / 2) / max(self.room_size_x, 1e-6) * (self.nx - 1)))
+        gj = int(round((y + self.room_size_y / 2) / max(self.room_size_y, 1e-6) * (self.ny - 1)))
+        gk = int(round(z / max(self.room_size_z, 1e-6) * (self.nz - 1)))
+        gi = max(0, min(self.nx - 1, gi))
+        gj = max(0, min(self.ny - 1, gj))
+        gk = max(0, min(self.nz - 1, gk))
+        return (gi, gj, gk)
+
+    def _grid_distance(
+        self, i1: int, j1: int, k1: int, i2: int, j2: int, k2: int
+    ) -> float:
+        """两格点之间的世界坐标欧式距离 (m)"""
+        x1, y1, z1 = self._grid_to_world(i1, j1, k1)
+        x2, y2, z2 = self._grid_to_world(i2, j2, k2)
+        return float(np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2))
+
     def set_ventilation_parameters(self, air_change_rate: float, outdoor_pm25: float):
         self.air_change_rate = air_change_rate
         self.outdoor_pm25 = outdoor_pm25

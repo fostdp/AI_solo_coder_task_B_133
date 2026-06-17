@@ -1,0 +1,86 @@
+﻿
+======================================================================
+  长信宫灯 Feature 新增功能测试套件
+  覆盖: 朝代对比 / 跨时代CADR / 多灯协同 / 虚拟操作 / API回归
+======================================================================
+
+  [WARN] 无法创建TestClient: Client.__init__() got an unexpected keyword argument 'app'
+  [WARN] API测试将跳过
+
+
+────────────────────────────────────────────────────────────
+  一、朝代对比 — 净化效率验证
+────────────────────────────────────────────────────────────
+  [PASS] test_cfd_high_temp
+  [PASS] test_cfd_low_velocity
+  [PASS] test_cfd_three_lamps
+  [PASS] test_config_loaded
+  [PASS] test_efficiency_ordering
+  [PASS] test_geometry_impact
+  [PASS] test_invalid_lamp_type
+  [PASS] test_lamp_type_recovery
+  [PASS] test_none_lamp_type
+
+────────────────────────────────────────────────────────────
+  二、跨时代对比 — CADR值验证
+────────────────────────────────────────────────────────────
+  [PASS] test_ancient_advantages
+  [PASS] test_ancient_cadr_range
+  [PASS] test_cadr_ancient_vs_modern
+  [PASS] test_comparison_dimensions
+  [PASS] test_efficiency_gap
+  [PASS] test_invalid_purifier
+  [PASS] test_modern_config
+  [PASS] test_zero_efficiency_cadr
+
+────────────────────────────────────────────────────────────
+  三、协同模拟 — 多灯宴会总净化量
+────────────────────────────────────────────────────────────
+  [PASS] test_banquet_config
+  [PASS] test_banquet_grid_output
+  [PASS] test_invalid_scene_key
+  [PASS] test_large_room_many_lamps
+  [PASS] test_min_overlap_strategy
+  [PASS] test_noble_gathering_lamps
+  [PASS] test_royal_banquet_lamps
+  [PASS] test_scene_override
+  [PASS] test_single_lamp_banquet
+  [PASS] test_synergy_improvement
+  [PASS] test_zero_lamp_banquet
+
+────────────────────────────────────────────────────────────
+  四、虚拟操作 — 交互教育性
+────────────────────────────────────────────────────────────
+  [PASS] test_auto_recovery_after_simulate
+  [PASS] test_blockage_reduces_purification
+  [PASS] test_empty_emissions
+  [PASS] test_flame_intensity_effect
+  [PASS] test_get_lamp_config
+  [PASS] test_lamp_switch_cfd_diff
+  [PASS] test_list_dynasty_lamps
+  [PASS] test_negative_temperature
+  [PASS] test_rapid_lamp_switching
+  [PASS] test_scene_override_restore
+  [PASS] test_set_lamp_type_success
+  [PASS] test_zero_temperature
+  [PASS] test_zero_velocity
+
+────────────────────────────────────────────────────────────
+  五、API端点回归测试
+────────────────────────────────────────────────────────────
+  [SKIP] test_api_ancient_vs_modern (TestClient不可用)
+  [SKIP] test_api_banquet_scenes (TestClient不可用)
+  [SKIP] test_api_banquet_simulation (TestClient不可用)
+  [SKIP] test_api_dynasty_compare (TestClient不可用)
+  [SKIP] test_api_dynasty_lamps (TestClient不可用)
+  [SKIP] test_api_health_unchanged (TestClient不可用)
+  [SKIP] test_api_invalid_lamp_type (TestClient不可用)
+  [SKIP] test_api_invalid_purifier (TestClient不可用)
+  [SKIP] test_api_invalid_scene (TestClient不可用)
+  [SKIP] test_api_modern_purifiers (TestClient不可用)
+  [SKIP] test_api_sensor_data_unchanged (TestClient不可用)
+
+======================================================================
+  测试完成: PASS=122  FAIL=0
+  全部通过!
+======================================================================

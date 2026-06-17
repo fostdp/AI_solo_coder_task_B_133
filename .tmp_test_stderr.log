@@ -1,0 +1,45 @@
+Process CFD-Worker:
+Traceback (most recent call last):
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\multiprocessing\process.py", line 320, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\SOLO-2\AI_solo_coder_task_B_133\backend\app\modules\cfd_worker.py", line 100, in _worker_process_entry
+    task: CfdTask = task_queue.get(timeout=0.5)
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\multiprocessing\queues.py", line 111, in get
+    if not self._poll(timeout):
+           ~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\multiprocessing\connection.py", line 267, in poll
+    return self._poll(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\multiprocessing\connection.py", line 366, in _poll
+    return bool(wait([self], timeout))
+                ~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\multiprocessing\connection.py", line 1138, in wait
+    ready_handles = _exhaustive_wait(waithandle_to_obj.keys(), timeout)
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\multiprocessing\connection.py", line 1070, in _exhaustive_wait
+    res = _winapi.WaitForMultipleObjects(short_L, False, timeout)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "D:\SOLO-2\AI_solo_coder_task_B_133\scripts\test_refactored_modules.py", line 536, in <module>
+    group5()  # CFDWorker
+    ~~~~~~^^
+  File "D:\SOLO-2\AI_solo_coder_task_B_133\scripts\test_refactored_modules.py", line 517, in group5
+    run_case("test_worker_process_lifecycle", test_worker_process_lifecycle)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\SOLO-2\AI_solo_coder_task_B_133\scripts\test_refactored_modules.py", line 64, in run_case
+    fn()
+    ~~^^
+  File "D:\SOLO-2\AI_solo_coder_task_B_133\scripts\test_refactored_modules.py", line 482, in test_worker_process_lifecycle
+    result = future.result(timeout=30)
+  File "D:\SOLO-2\AI_solo_coder_task_B_133\backend\app\modules\cfd_worker.py", line 164, in result
+    if not self._event.wait(timeout=timeout):
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\threading.py", line 670, in wait
+    signaled = self._cond.wait(timeout)
+  File "C:\Users\y\AppData\Local\Python\pythoncore-3.14-64\Lib\threading.py", line 373, in wait
+    gotit = waiter.acquire(True, timeout)
+KeyboardInterrupt

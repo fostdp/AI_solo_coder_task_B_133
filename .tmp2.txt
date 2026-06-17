@@ -1,0 +1,2 @@
+﻿OK! overlap=min synergy=0.657 avg_pm25=57.53
+num_lamp_data=5 grid_data=240
