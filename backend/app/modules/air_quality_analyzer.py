@@ -23,7 +23,7 @@ from sqlalchemy import insert
 
 from ..bus import MessageBus, CFD_RESULT, AIR_QUALITY_INPUT, AIR_QUALITY_RESULT
 from ..models.lamp import AirQualityAnalysis, PM25Grid
-from ..config_loader import load_air_quality_config
+from ..config_loader import load_air_quality_config, load_dynasty_lamps_config, load_banquet_scenes_config
 
 logger = logging.getLogger(__name__)
 
@@ -525,5 +525,216 @@ class AirQualityAnalyzer:
             "ventilation_decay": ventilation_decay,
             "avg_pm25": avg_conc,
             "purification_details": purif_details,
+        }
+        return result, purified
+
+    # ------------------------------------------------------------------
+    # Feature: 多灯宴会协同净化
+    # ------------------------------------------------------------------
+    def set_scene_override(
+        self,
+        room_size_x: Optional[float] = None,
+        room_size_y: Optional[float] = None,
+        room_size_z: Optional[float] = None,
+        nx: Optional[int] = None,
+        ny: Optional[int] = None,
+        nz: Optional[int] = None,
+        lamp_positions: Optional[List[Dict[str, Any]]] = None,
+    ):
+        """覆写房间尺寸和网格分辨率（用于宴会场景，不改变原单灯实例的其他参数）"""
+        if room_size_x is not None:
+            self.room_size_x = room_size_x
+        if room_size_y is not None:
+            self.room_size_y = room_size_y
+        if room_size_z is not None:
+            self.room_size_z = room_size_z
+        if nx is not None:
+            self.nx = nx
+        if ny is not None:
+            self.ny = ny
+        if nz is not None:
+            self.nz = nz
+        if lamp_positions:
+            self.multi_lamp_positions = [
+                np.array([lp["x_m"], lp["y_m"], lp["z_m"]], dtype=np.float64)
+                for lp in lamp_positions
+            ]
+            self.multi_lamp_types = [lp.get("lamp_type", "changxin_gongdeng") for lp in lamp_positions]
+        self._grid_coords = self._compute_grid_coordinates()
+        self._velocity_field = self._calculate_velocity_field()
+
+    def initialize_multi_lamp_field(
+        self,
+        base_pm25: float,
+        lamp_emissions: List[float],
+    ) -> np.ndarray:
+        """多灯源初始化浓度场：每个灯位置叠加高斯源"""
+        C = np.full((self.nx, self.ny, self.nz), float(base_pm25), dtype=np.float64)
+        positions = getattr(self, "multi_lamp_positions", None) or [self.lamp_pos]
+        lamp_types = getattr(self, "multi_lamp_types", None) or ["changxin_gongdeng"]
+
+        try:
+            dynasty_cfg = load_dynasty_lamps_config()
+            lamps_db = dynasty_cfg.get("dynasty_lamps", {})
+        except Exception:
+            lamps_db = {}
+
+        for idx, lamp_pos in enumerate(positions):
+            emission = lamp_emissions[idx] if idx < len(lamp_emissions) else 0.0
+            if emission <= 0:
+                continue
+            lamp_type = lamp_types[idx] if idx < len(lamp_types) else "changxin_gongdeng"
+            lamp_cfg = lamps_db.get(lamp_type, {})
+            purif_cfg = lamp_cfg.get("purification_characteristics", {})
+            sigma = purif_cfg.get("local_purification_radius_m", self.lamp_sigma)
+            src_strength = self.lamp_src_strength
+
+            lamp_gx = int(round(lamp_pos[0] / self.room_size_x * (self.nx - 1)))
+            lamp_gy = int(round(lamp_pos[1] / self.room_size_y * (self.ny - 1)))
+            lamp_gz = int(round(lamp_pos[2] / self.room_size_z * (self.nz - 1)))
+            lamp_gx = int(np.clip(lamp_gx, 0, self.nx - 1))
+            lamp_gy = int(np.clip(lamp_gy, 0, self.ny - 1))
+            lamp_gz = int(np.clip(lamp_gz, 0, self.nz - 1))
+            sigma_sq = (sigma / max(self.room_size_x, 1)) ** 2 * self.nx ** 2
+            for i in range(self.nx):
+                for j in range(self.ny):
+                    for k in range(self.nz):
+                        dist_sq = (i - lamp_gx) ** 2 + (j - lamp_gy) ** 2 + (k - lamp_gz) ** 2
+                        gauss = np.exp(-dist_sq / (2 * sigma_sq + 1e-12))
+                        C[i, j, k] += src_strength * emission * gauss
+        return C
+
+    def apply_multi_lamp_purification(
+        self,
+        field: np.ndarray,
+        settling_efficiencies: List[float],
+        flue_velocities: List[float],
+    ) -> Tuple[np.ndarray, float, Dict[str, Any]]:
+        """多灯协同净化：每个灯在其净化半径内独立净化，叠加效果取最强衰减"""
+        before = float(np.mean(field))
+        positions = getattr(self, "multi_lamp_positions", None) or [self.lamp_pos]
+        lamp_types = getattr(self, "multi_lamp_types", None) or ["changxin_gongdeng"]
+
+        try:
+            dynasty_cfg = load_dynasty_lamps_config()
+            lamps_db = dynasty_cfg.get("dynasty_lamps", {})
+        except Exception:
+            lamps_db = {}
+
+        purified = field.copy()
+        per_lamp_details = []
+
+        for idx, lamp_pos in enumerate(positions):
+            lamp_type = lamp_types[idx] if idx < len(lamp_types) else "changxin_gongdeng"
+            lamp_cfg = lamps_db.get(lamp_type, {})
+            purif_cfg = lamp_cfg.get("purification_characteristics", {})
+
+            base_purif = purif_cfg.get("base_purification_efficiency", self.base_purification)
+            w_settle = purif_cfg.get("settling_weight", self.w_settle)
+            w_vel = purif_cfg.get("velocity_weight", self.w_vel)
+            radius = purif_cfg.get("local_purification_radius_m", self.purif_radius)
+            strength = purif_cfg.get("local_purification_strength", self.purif_strength)
+            decay = self.decay_exp
+
+            settle_eff = settling_efficiencies[idx] if idx < len(settling_efficiencies) else 0.0
+            flue_vel = flue_velocities[idx] if idx < len(flue_velocities) else 0.0
+            settling_factor = min(max(settle_eff / max(self.min_settle, 1e-9), 0.0), 1.0)
+            velocity_factor = min(max(flue_vel / max(self.min_vel, 1e-9), 0.0), 1.0)
+            purification_efficiency = base_purif * (
+                w_settle * settling_factor + w_vel * velocity_factor
+            )
+
+            lamp_world_x = lamp_pos[0] - self.room_size_x / 2
+            lamp_world_y = lamp_pos[1] - self.room_size_y / 2
+            lamp_world_z = lamp_pos[2]
+
+            for i in range(self.nx):
+                for j in range(self.ny):
+                    for k in range(self.nz):
+                        wx, wy, wz = self._grid_to_world(i, j, k)
+                        dist = np.sqrt(
+                            (wx - lamp_world_x) ** 2
+                            + (wy - lamp_world_y) ** 2
+                            + (wz - lamp_world_z) ** 2
+                        )
+                        if dist <= radius:
+                            falloff = (1 - dist / radius) ** decay
+                            local_eff = strength * purification_efficiency * falloff
+                            candidate = field[i, j, k] * (1 - local_eff)
+                            if candidate < purified[i, j, k]:
+                                purified[i, j, k] = candidate
+
+            per_lamp_details.append({
+                "lamp_index": idx,
+                "lamp_type": lamp_type,
+                "purification_efficiency": purification_efficiency,
+                "settling_factor": settling_factor,
+                "velocity_factor": velocity_factor,
+                "radius_m": radius,
+            })
+
+        after = float(np.mean(purified))
+        purification_rate = max(0.0, (before - after) / max(before, 1e-9))
+        details = {
+            "avg_before": before,
+            "avg_after": after,
+            "purification_rate": purification_rate,
+            "num_lamps": len(positions),
+            "per_lamp": per_lamp_details,
+        }
+        return purified, purification_rate, details
+
+    def analyze_banquet(
+        self,
+        base_pm25: float,
+        lamp_emissions_ug: List[float],
+        settling_efficiencies: List[float],
+        flue_velocities: List[float],
+        flue_temperatures: Optional[List[float]] = None,
+        ambient_temperature: float = 22.0,
+        ambient_humidity: float = 50.0,
+        air_change_rate: Optional[float] = None,
+        outdoor_pm25: Optional[float] = None,
+    ) -> Tuple[Dict[str, Any], np.ndarray]:
+        """多灯宴会场景综合分析"""
+        if air_change_rate is not None:
+            self.air_change_rate = air_change_rate
+            self._velocity_field = self._calculate_velocity_field()
+        if outdoor_pm25 is not None:
+            self.outdoor_pm25 = outdoor_pm25
+
+        D = self.calculate_diffusion_coefficient(ambient_temperature, ambient_humidity)
+        initial = self.initialize_multi_lamp_field(base_pm25, lamp_emissions_ug)
+        diffused = self.solve_diffusion(initial, D, ambient_temperature)
+        purified, purification_rate, details = self.apply_multi_lamp_purification(
+            diffused, settling_efficiencies, flue_velocities
+        )
+        avg_conc = float(np.mean(purified))
+        gx, gy, gz = np.gradient(purified)
+        grad_x = float(np.mean(np.abs(gx)))
+        grad_y = float(np.mean(np.abs(gy)))
+        grad_z = float(np.mean(np.abs(gz)))
+        aqi_level, health_risk = self.evaluate_aqi(avg_conc)
+        air_change_efficiency = (
+            0.4 * purification_rate
+            + 0.6 * min(self.air_change_rate / 4.0, 1.0)
+        )
+        ventilation_decay = 1.0 - np.exp(-self.air_change_rate / 60.0)
+
+        result = {
+            "pm25_diffusion_coeff": D,
+            "pm25_gradient_x": grad_x,
+            "pm25_gradient_y": grad_y,
+            "pm25_gradient_z": grad_z,
+            "purification_rate": purification_rate,
+            "air_change_efficiency": air_change_efficiency,
+            "aqi_level": aqi_level,
+            "health_risk": health_risk,
+            "air_change_rate": self.air_change_rate,
+            "outdoor_pm25": self.outdoor_pm25,
+            "ventilation_decay": ventilation_decay,
+            "avg_pm25": avg_conc,
+            "purification_details": details,
+            "scene_type": "banquet_multi_lamp",
         }
         return result, purified

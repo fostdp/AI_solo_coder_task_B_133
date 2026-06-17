@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.config import settings
 from app.routers.sensor import router as sensor_router
+from app.routers.comparison import router as comparison_router
 from app.bus import MessageBus
 from app.database import AsyncSessionLocal
 from app.modules import (
@@ -122,6 +123,7 @@ app.add_middleware(
 )
 
 app.include_router(sensor_router)
+app.include_router(comparison_router)
 
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 if os.path.exists(frontend_path):

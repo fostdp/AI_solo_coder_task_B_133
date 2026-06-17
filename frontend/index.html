@@ -385,6 +385,106 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .sub-tabs {
+            display: flex;
+            gap: 3px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .sub-tab {
+            flex: 1 1 auto;
+            padding: 5px 8px;
+            background: rgba(30, 40, 70, 0.4);
+            border: 1px solid rgba(100, 150, 255, 0.12);
+            color: #8899bb;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 11px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .sub-tab.active {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.2), rgba(60, 100, 200, 0.2));
+            color: #aaccff;
+            border-color: rgba(100, 150, 255, 0.4);
+        }
+        .sub-panel {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(100, 150, 255, 0.12);
+        }
+        .sub-panel.hidden { display: none; }
+
+        .inline-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .inline-row label {
+            font-size: 11px;
+            color: #8899bb;
+            min-width: 70px;
+        }
+        .inline-row input,
+        .inline-row select {
+            flex: 1;
+            padding: 5px 7px;
+            background: rgba(30, 40, 70, 0.6);
+            color: #fff;
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .dynasty-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        .dynasty-table th,
+        .dynasty-table td {
+            border: 1px solid rgba(100, 150, 255, 0.15);
+            padding: 5px 6px;
+            text-align: center;
+        }
+        .dynasty-table th {
+            background: rgba(100, 120, 160, 0.2);
+            color: #e8c87a;
+            font-weight: 600;
+        }
+        .dynasty-table td.label {
+            text-align: left;
+            color: #8899bb;
+            background: rgba(30, 40, 70, 0.4);
+        }
+
+        .chart-wrap {
+            width: 100%;
+            margin: 8px 0;
+            text-align: center;
+        }
+        .chart-wrap canvas {
+            background: rgba(15, 20, 40, 0.8);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            border-radius: 6px;
+            max-width: 100%;
+        }
+        .compare-note {
+            margin-top: 8px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #aaccff;
+            background: rgba(50, 80, 140, 0.15);
+            border-left: 2px solid #6af;
+            line-height: 1.6;
+        }
+        h4.sub-title {
+            font-size: 12px;
+            color: #e8c87a;
+            margin: 8px 0 4px;
+        }
     </style>
 </head>
 <body>
@@ -469,6 +569,87 @@
                     <div class="view-tab active" data-view="lamp">宫灯3D</div>
                     <div class="view-tab" data-view="particles">烟气流线</div>
                     <div class="view-tab" data-view="pm25">PM2.5云图</div>
+                    <div class="view-tab" data-view="dynasty_compare">朝代对比</div>
+                    <div class="view-tab" data-view="banquet">宴会场景</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">朝代环保灯</div>
+                <div class="control-group">
+                    <label>当前灯型:</label>
+                    <select id="lamp-type-select" style="width: 100%; padding: 6px 8px; background: rgba(30, 40, 70, 0.6); color: #fff; border: 1px solid rgba(100, 150, 255, 0.3); border-radius: 4px; font-size: 12px;">
+                        <option value="changxin_gongdeng">长信宫灯 (西汉)</option>
+                        <option value="yanyu_deng">雁鱼灯 (西汉)</option>
+                        <option value="niu_deng">错银铜牛灯 (东汉)</option>
+                    </select>
+                </div>
+                <p class="compare-note" id="lamp-type-desc">
+                    长信宫灯采用宫女造型，双弯烟道结构，利用水过滤烟尘。
+                </p>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">对比 & 跨时代对比</div>
+                <div class="sub-tabs" id="compare-tabs">
+                    <div class="sub-tab active" data-subtab="dynasty">朝代灯对比</div>
+                    <div class="sub-tab" data-subtab="modern">古今对比</div>
+                    <div class="sub-tab" data-subtab="banquet">宴会仿真</div>
+                </div>
+
+                <div class="sub-panel" id="subpanel-dynasty">
+                    <h4 class="sub-title">CFD工况参数</h4>
+                    <div class="inline-row"><label>空气流量</label><input type="number" id="in-airflow" value="0.012" step="0.001"></div>
+                    <div class="inline-row"><label>入口温度</label><input type="number" id="in-temp" value="800.0"></div>
+                    <div class="inline-row"><label>入口压力</label><input type="number" id="in-pressure" value="101325"></div>
+                    <div class="inline-row"><label>入口PM2.5</label><input type="number" id="in-pm25" value="12.0"></div>
+                    <div class="inline-row"><label>环境温度</label><input type="number" id="in-ambient" value="25.0"></div>
+                    <button class="btn" id="btn-run-dynasty-compare" style="width: 100%; margin-top: 8px;">运行朝代对比</button>
+                    <h4 class="sub-title">朝代灯参数对比</h4>
+                    <div id="dynasty-compare-table" style="margin-top: 6px;"></div>
+                </div>
+
+                <div class="sub-panel hidden" id="subpanel-modern">
+                    <h4 class="sub-title">古今对比配置</h4>
+                    <div class="inline-row"><label>古代灯型</label>
+                        <select id="in-ancient-lamp">
+                            <option value="changxin_gongdeng">长信宫灯</option>
+                            <option value="yanyu_deng">雁鱼灯</option>
+                            <option value="niu_deng">错银铜牛灯</option>
+                        </select>
+                    </div>
+                    <div class="inline-row"><label>现代净化器</label>
+                        <select id="in-modern-model">
+                            <option value="basic_hepa_h13">基础HEPA H13</option>
+                            <option value="professional_medical">专业医用级</option>
+                        </select>
+                    </div>
+                    <div class="inline-row"><label>房间体积</label><input type="number" id="in-room-vol" value="60"></div>
+                    <div class="inline-row"><label>运行时间</label><input type="number" id="in-runtime" value="4"></div>
+                    <button class="btn" id="btn-run-ancient-modern" style="width: 100%; margin-top: 8px;">运行跨时代对比</button>
+                    <h4 class="sub-title">综合对比雷达图</h4>
+                    <div class="chart-wrap"><canvas id="ancient-modern-radar" width="320" height="300"></canvas></div>
+                    <h4 class="sub-title">关键指标柱状图</h4>
+                    <div class="chart-wrap"><canvas id="ancient-modern-bars" width="320" height="240"></canvas></div>
+                    <div id="ancient-modern-summary"></div>
+                </div>
+
+                <div class="sub-panel hidden" id="subpanel-banquet">
+                    <h4 class="sub-title">宴会场景</h4>
+                    <div class="inline-row"><label>场景选择</label>
+                        <select id="in-banquet-scene">
+                            <option value="royal_banquet">皇室宴会 (20×15m)</option>
+                            <option value="noble_gathering">贵族雅集 (12×10m)</option>
+                        </select>
+                    </div>
+                    <div class="inline-row"><label>基础PM2.5</label><input type="number" id="in-banquet-base" value="50.0"></div>
+                    <div class="inline-row"><label>时间窗(s)</label><input type="number" id="in-banquet-window" value="1800"></div>
+                    <div class="inline-row" style="gap: 6px;">
+                        <button class="btn btn-secondary" id="btn-load-banquet-scenes" style="flex: 1;">加载场景</button>
+                        <button class="btn" id="btn-run-banquet" style="flex: 2;">运行宴会协同仿真</button>
+                    </div>
+                    <h4 class="sub-title">仿真结果</h4>
+                    <div id="banquet-info" style="font-size: 11px; color: #aab;"></div>
                 </div>
             </div>
 
@@ -545,10 +726,12 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="/static/gong_deng_3d.js"></script>
     <script src="/static/air_quality_panel.js"></script>
+    <script src="/static/comparison_ui.js"></script>
     <script>
       window.addEventListener('DOMContentLoaded', () => {
         if (typeof GongDeng3D !== 'undefined') GongDeng3D.init();
         if (typeof AirQualityPanel !== 'undefined') AirQualityPanel.init();
+        if (typeof ComparisonUI !== 'undefined') ComparisonUI.init();
       });
     </script>
 </body>

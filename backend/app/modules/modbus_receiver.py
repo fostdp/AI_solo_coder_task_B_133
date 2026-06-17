@@ -166,6 +166,7 @@ class ModbusReceiver:
             "ambient_temperature": full.get("ambient_temperature", 22.0),
             "ambient_humidity": full.get("ambient_humidity", 50.0),
             "fuel_type": full["fuel_type"],
+            "lamp_type": full.get("lamp_type"),
             "indoor_pm25": full["indoor_pm25"],
             "oil_level": full.get("oil_level", 0.0),
         }

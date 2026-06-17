@@ -11,6 +11,15 @@ class Lamp(Base):
     location = Column(String(200))
     description = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    lamp_type = Column(String(50), default="changxin_gongdeng")
+    dynasty = Column(String(50))
+    flue_length_m = Column(Float)
+    flue_diameter_m = Column(Float)
+    bend_count = Column(Integer)
+    height_m = Column(Float)
+    weight_kg = Column(Float)
+    material = Column(String(100))
+    base_purification_efficiency = Column(Float)
 
 
 class SensorData(Base):

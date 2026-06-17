@@ -21,9 +21,22 @@ CREATE TABLE IF NOT EXISTS lamps (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 插入默认宫灯数据
-INSERT INTO lamps (lamp_id, lamp_name, location, description) VALUES
-(1, '长信宫灯-1号', '展厅A区-汉代展区', '复原的汉代长信宫灯，配备烟道模拟系统')
+-- Feature: 朝代灯对比 - 扩展 lamps 表（兼容原有结构，新列全部可空带默认值）
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS lamp_type VARCHAR(50) DEFAULT 'changxin_gongdeng';
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS dynasty VARCHAR(50);
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS flue_length_m DOUBLE PRECISION;
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS flue_diameter_m DOUBLE PRECISION;
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS bend_count INTEGER;
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS height_m DOUBLE PRECISION;
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS weight_kg DOUBLE PRECISION;
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS material VARCHAR(100);
+ALTER TABLE lamps ADD COLUMN IF NOT EXISTS base_purification_efficiency DOUBLE PRECISION;
+
+-- 插入三种朝代环保灯
+INSERT INTO lamps (lamp_id, lamp_name, location, description, lamp_type, dynasty, flue_length_m, flue_diameter_m, bend_count, height_m, weight_kg, material, base_purification_efficiency) VALUES
+(1, '长信宫灯-1号', '展厅A区-汉代展区', '复原的汉代长信宫灯，配备烟道模拟系统', 'changxin_gongdeng', '西汉', 0.8, 0.05, 2, 0.48, 15.85, '青铜鎏金', 0.55),
+(2, '雁鱼灯-1号', '展厅A区-西汉展区', '西汉雁鱼铜灯，鸿雁回首衔鱼造型', 'yanyu_deng', '西汉', 0.6, 0.04, 2, 0.54, 12.5, '青铜', 0.60),
+(3, '错银铜牛灯-1号', '展厅A区-东汉展区', '东汉错银铜牛灯，双牛角烟道设计', 'niu_deng', '东汉', 0.7, 0.06, 3, 0.46, 18.2, '青铜错银', 0.65)
 ON CONFLICT (lamp_id) DO NOTHING;
 
 -- ============================================

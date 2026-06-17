@@ -29,6 +29,21 @@ def load_air_quality_config() -> Dict[str, Any]:
     return _load_json(_CONFIG_ROOT / "air_quality_parameters.json")
 
 
+def load_dynasty_lamps_config() -> Dict[str, Any]:
+    """加载朝代环保灯配置"""
+    return _load_json(_CONFIG_ROOT / "dynasty_lamps.json")
+
+
+def load_modern_purifiers_config() -> Dict[str, Any]:
+    """加载现代空气净化器参数配置"""
+    return _load_json(_CONFIG_ROOT / "modern_purifiers.json")
+
+
+def load_banquet_scenes_config() -> Dict[str, Any]:
+    """加载多灯宴会场景配置"""
+    return _load_json(_CONFIG_ROOT / "banquet_scenes.json")
+
+
 def get_config_root() -> Path:
     """返回配置根目录"""
     return _CONFIG_ROOT

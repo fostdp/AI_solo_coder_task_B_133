@@ -1,0 +1,118 @@
+{
+  "_comment": "朝代环保灯数据库 - 三种古代环保灯的烟道几何与净化特性（长信宫灯、雁鱼灯、牛灯）",
+  "dynasty_lamps": {
+    "changxin_gongdeng": {
+      "name": "长信宫灯",
+      "dynasty": "西汉",
+      "era": "公元前202年—公元8年",
+      "description": "西汉窦太后长信宫御用宫灯，宫灯通体鎏金，宫女跪坐持灯，烟道从宫女右臂直达体内，烟灰沉积于水盘（水滤烟设计",
+      "material": "青铜鎏金",
+      "height_m": 0.48,
+      "weight_kg": 15.85,
+      "flue_geometry": {
+        "flue_length_m": 0.8,
+        "flue_diameter_m": 0.05,
+        "flue_wall_thickness_m": 0.002,
+        "flue_inclination_deg": 0.0,
+        "bend_count": 2,
+        "bend_angle_deg": 90.0,
+        "flue_type": "curved_arm_flue"
+      },
+      "purification_characteristics": {
+        "base_purification_efficiency": 0.55,
+        "settling_weight": 0.7,
+        "velocity_weight": 0.3,
+        "water_filter_effectiveness": 0.65,
+        "local_purification_radius_m": 2.5,
+        "local_purification_strength": 0.85,
+        "aesthetic_rating": 5
+      },
+      "historical_significance": "中国最早的环保灯具设计之一，利用烟道导烟原理领先西方近2000年",
+      "color_3d_model": {
+        "body_color": "#d4a855",
+        "accent_color": "#ffd700",
+        "lampshade_color": "#cc2222",
+        "base_color": "#8b4513"
+      }
+    },
+    "yanyu_deng": {
+      "name": "雁鱼灯",
+      "dynasty": "西汉",
+      "era": "西汉中晚期",
+      "description": "雁鱼铜灯，鸿雁回首衔鱼，鱼腹与雁颈相连为烟道，烟灰通过雁颈导入雁腹水腔，水滤烟设计",
+      "material": "青铜",
+      "height_m": 0.54,
+      "weight_kg": 12.5,
+      "flue_geometry": {
+        "flue_length_m": 0.6,
+        "flue_diameter_m": 0.04,
+        "flue_wall_thickness_m": 0.002,
+        "flue_inclination_deg": 30.0,
+        "bend_count": 2,
+        "bend_angle_deg": 60.0,
+        "flue_type": "goose_neck_s_shape"
+      },
+      "purification_characteristics": {
+        "base_purification_efficiency": 0.60,
+        "settling_weight": 0.75,
+        "velocity_weight": 0.25,
+        "water_filter_effectiveness": 0.70,
+        "local_purification_radius_m": 2.0,
+        "local_purification_strength": 0.80,
+        "aesthetic_rating": 4
+      },
+      "historical_significance": "造型生动自然，雁鱼谐音『有余』，实用与艺术完美结合",
+      "color_3d_model": {
+        "body_color": "#7c9a3e",
+        "accent_color": "#c9b36b",
+        "lampshade_color": "#e8d27a",
+        "base_color": "#3a5a2a"
+      }
+    },
+    "niu_deng": {
+      "name": "错银铜牛灯",
+      "dynasty": "东汉",
+      "era": "东汉早期",
+      "description": "东汉错银铜牛灯，牛造型稳健伫立，灯盘可转动调节光照角度，烟道从牛角两侧上升入牛腹水腔，水滤烟设计",
+      "material": "青铜错银",
+      "height_m": 0.46,
+      "weight_kg": 18.2,
+      "flue_geometry": {
+        "flue_length_m": 0.7,
+        "flue_diameter_m": 0.06,
+        "flue_wall_thickness_m": 0.003,
+        "flue_inclination_deg": 15.0,
+        "bend_count": 3,
+        "bend_angle_deg": 45.0,
+        "flue_type": "dual_horn_dual_flue"
+      },
+      "purification_characteristics": {
+        "base_purification_efficiency": 0.65,
+        "settling_weight": 0.8,
+        "velocity_weight": 0.2,
+        "water_filter_effectiveness": 0.75,
+        "local_purification_radius_m": 2.2,
+        "local_purification_strength": 0.88,
+        "aesthetic_rating": 5
+      },
+      "historical_significance": "双烟道设计比单烟道效率更高，错银工艺体现汉代高超的金银错技术巅峰之作",
+      "color_3d_model": {
+        "body_color": "#6b5b3d",
+        "accent_color": "#e0d8c0",
+        "lampshade_color": "#b8860b",
+        "base_color": "#4a3a2a"
+      }
+    }
+  },
+  "comparison_metrics": [
+    "flue_length_m",
+    "flue_diameter_m",
+    "bend_count",
+    "base_purification_efficiency",
+    "water_filter_effectiveness",
+    "local_purification_radius_m",
+    "aesthetic_rating",
+    "height_m",
+    "weight_kg"
+  ]
+}

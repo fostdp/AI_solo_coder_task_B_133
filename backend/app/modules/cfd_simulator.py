@@ -22,7 +22,7 @@ from sqlalchemy import insert, select
 
 from ..bus import MessageBus, CFD_INPUT, CFD_RESULT
 from ..models.lamp import FlueSimulation
-from ..config_loader import load_fuel_config, load_cfd_config
+from ..config_loader import load_fuel_config, load_cfd_config, load_dynasty_lamps_config
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +83,14 @@ class CFDSimulator:
 
         cfd_cfg = load_cfd_config()
         fuel_cfg = load_fuel_config()
+        try:
+            dynasty_cfg = load_dynasty_lamps_config()
+            self.DYNASTY_LAMPS = dynasty_cfg.get("dynasty_lamps", {})
+        except Exception:
+            self.DYNASTY_LAMPS = {}
 
-        self.params = CFDGeometryParams(cfd_cfg)
+        self._default_params = CFDGeometryParams(cfd_cfg)
+        self.params = self._default_params
         self.fluid = CFDFluidConstants(cfd_cfg)
         self.heat = CFDHeatTransferConstants(cfd_cfg)
         self.pressure_cfg = cfd_cfg["pressure_loss"]
@@ -94,7 +100,39 @@ class CFDSimulator:
         self.FUEL_TYPES = fuel_cfg["fuel_types"]
         self.MODBUS_TO_FUEL = fuel_cfg["modbus_mapping"]
         self.current_fuel_type = "animal_fat"
+        self.current_lamp_type = "changxin_gongdeng"
         self._bus_bound = False
+
+    # ------------------------------------------------------------------
+    # 朝代灯参数切换（不破坏原有默认值）
+    # ------------------------------------------------------------------
+    def set_lamp_type(self, lamp_type: Optional[str]) -> bool:
+        """切换到指定朝代灯的烟道几何参数，失败保持默认参数不变"""
+        if not lamp_type or lamp_type not in self.DYNASTY_LAMPS:
+            self.params = self._default_params
+            self.current_lamp_type = "changxin_gongdeng"
+            return False
+        lamp_cfg = self.DYNASTY_LAMPS[lamp_type]
+        fg = lamp_cfg.get("flue_geometry", {})
+        self.params = CFDGeometryParams({
+            "flue_geometry": {
+                "flue_length_m": fg.get("flue_length_m", self._default_params.flue_length),
+                "flue_diameter_m": fg.get("flue_diameter_m", self._default_params.flue_diameter),
+                "flue_wall_thickness_m": fg.get("flue_wall_thickness_m", self._default_params.wall_thickness),
+                "flue_inclination_deg": fg.get("flue_inclination_deg", 0.0),
+                "bend_count": fg.get("bend_count", self._default_params.bend_count),
+                "bend_angle_deg": fg.get("bend_angle_deg", self._default_params.bend_angle),
+            }
+        })
+        self.current_lamp_type = lamp_type
+        return True
+
+    def get_lamp_config(self, lamp_type: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        key = lamp_type or self.current_lamp_type
+        return self.DYNASTY_LAMPS.get(key)
+
+    def list_dynasty_lamps(self) -> Dict[str, Any]:
+        return self.DYNASTY_LAMPS
 
     # ------------------------------------------------------------------
     # 消息总线绑定
@@ -117,6 +155,7 @@ class CFDSimulator:
                 ambient_humidity=payload.get("ambient_humidity", 50.0),
                 oil_consumption=payload.get("oil_consumption", 0.0),
                 fuel_type=payload.get("fuel_type", self.current_fuel_type),
+                lamp_type=payload.get("lamp_type"),
             )
             # 持久化（失败不阻断管线）
             try:
@@ -329,7 +368,11 @@ class CFDSimulator:
         ambient_humidity: float = 50.0,
         oil_consumption: float = 1.0,
         fuel_type: Optional[str] = None,
+        lamp_type: Optional[str] = None,
     ) -> Dict[str, Any]:
+        previous_lamp = self.current_lamp_type
+        if lamp_type:
+            self.set_lamp_type(lamp_type)
         if fuel_type:
             self.set_fuel_type(fuel_type)
         fuel = self.get_fuel_properties(fuel_type)
@@ -390,7 +433,7 @@ class CFDSimulator:
         rho_out = self._flue_gas_density(T_out, fuel_type)
         v_out = flue_velocity * (rho / max(rho_out, 1e-9))
 
-        return {
+        result = {
             "reynolds_number": round(Re, 4),
             "prandtl_number": round(Pr, 4),
             "grashof_number": round(Gr, 4),
@@ -407,7 +450,11 @@ class CFDSimulator:
             "combustion_efficiency": eta_comb,
             "mass_flow_rate_kg_s": round(mass_flow, 8),
             "temperature_drop_c": round(T_in - T_out, 4),
+            "lamp_type": self.current_lamp_type,
         }
+        if previous_lamp and previous_lamp != self.current_lamp_type:
+            self.set_lamp_type(previous_lamp)
+        return result
 
     # ------------------------------------------------------------------
     # 粒子轨迹（用于前端可视化 API）

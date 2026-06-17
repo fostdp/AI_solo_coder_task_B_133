@@ -1,0 +1,83 @@
+{
+  "_comment": "现代空气净化器参数数据库 - 用于跨时代效率对比",
+  "modern_purifiers": {
+    "basic_hepa_h13": {
+      "name": "家用HEPA H13级净化器",
+      "brand": "通用标准型",
+      "technology": "HEPA滤网 + 活性炭",
+      "cadr_pm25_m3h": 350.0,
+      "cadr_formaldehyde_m3h": 200.0,
+      "power_w": 50.0,
+      "noise_db": 35.0,
+      "coverage_area_m2": 30.0,
+      "filter_lifetime_hours": 3000,
+      "removal_efficiency_pm25_percent": 99.97,
+      "removal_efficiency_bacteria_percent": 99.9,
+      "price_rmb": 2500.0,
+      "energy_class": "二级能效",
+      "year_invented": 1940,
+      "modern_features": ["HEPA滤网", "活性炭吸附", "负离子", "UV杀菌"
+    },
+    "professional_medical": {
+      "name": "医疗级空气净化器",
+      "brand": "医疗专用型",
+      "technology": "HEPA H14 + 光触媒 + 等离子",
+      "cadr_pm25_m3h": 800.0,
+      "cadr_formaldehyde_m3h": 400.0,
+      "power_w": 120.0,
+      "noise_db": 48.0,
+      "coverage_area_m2": 80.0,
+      "filter_lifetime_hours": 5000,
+      "removal_efficiency_pm25_percent": 99.995,
+      "removal_efficiency_bacteria_percent": 99.99,
+      "price_rmb": 8000.0,
+      "energy_class": "一级能效",
+      "year_invented": 1980,
+      "modern_features": ["HEPA H14滤网", "光触媒分解", "等离子灭菌", "智能传感器"]
+    }
+  },
+  "comparison_dimensions": [
+    {
+      "key": "purification_efficiency",
+      "label": "净化效率(%)",
+      "ancient_unit": "percent",
+      "modern_unit": "percent"
+    },
+    {
+      "key": "coverage_area",
+      "label": "有效净化面积(m²)",
+      "ancient_unit": "m2",
+      "modern_unit": "m2"
+    },
+    {
+      "key": "energy_consumption",
+      "label": "能耗(W)",
+      "ancient_unit": "none",
+      "modern_unit": "W"
+    },
+    {
+      "key": "noise_level",
+      "label": "噪音(dB)",
+      "ancient_unit": "dB",
+      "modern_unit": "dB"
+    },
+    {
+      "key": "environmental_impact",
+      "label": "环境友好度",
+      "ancient_unit": "score",
+      "modern_unit": "score"
+    },
+    {
+      "key": "aesthetic_value",
+      "label": "艺术价值",
+      "ancient_unit": "score",
+      "modern_unit": "score"
+    },
+    {
+      "key": "historical_significance",
+      "label": "历史意义",
+      "ancient_unit": "score",
+      "modern_unit": "score"
+    }
+  ]
+}

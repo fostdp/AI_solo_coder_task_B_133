@@ -1,0 +1,74 @@
+{
+  "_comment": "多灯宴会场景配置 - 汉代宴会多盏宫灯协同净化场景",
+  "default_scene": "royal_banquet",
+  "scenes": {
+    "royal_banquet": {
+      "name": "皇室宴会",
+      "description": "汉代皇室宴会场景，大殿内多盏宫灯分布",
+      "room_geometry": {
+        "room_size_x_m": 20.0,
+        "room_size_y_m": 15.0,
+        "room_size_z_m": 5.0
+      },
+      "grid_resolution": {
+        "nx": 8,
+        "ny": 6,
+        "nz": 5
+      },
+      "lamp_positions": [
+        { "lamp_type": "changxin_gongdeng", "x_m": 5.0, "y_m": 4.0, "z_m": 1.8 },
+        { "lamp_type": "changxin_gongdeng", "x_m": 15.0, "y_m": 4.0, "z_m": 1.8 },
+        { "lamp_type": "yanyu_deng", "x_m": 5.0, "y_m": 11.0, "z_m": 1.8 },
+        { "lamp_type": "yanyu_deng", "x_m": 15.0, "y_m": 11.0, "z_m": 1.8 },
+        { "lamp_type": "niu_deng", "x_m": 10.0, "y_m": 7.5, "z_m": 1.8 }
+      ],
+      "default_parameters": {
+        "base_pm25_ugm3": 45.0,
+        "air_change_rate_ach": 0.5,
+        "outdoor_pm25_ugm3": 35.0,
+        "ambient_temperature_c": 22.0,
+        "ambient_humidity_percent": 50.0,
+        "flue_temperature_c": 150.0,
+        "flue_velocity_ms": 0.4
+      },
+      "ventilation": {
+        "inlet_position": { "x_ratio": 0.05, "y_ratio": 0.5, "z_ratio": 0.9 },
+        "outlet_position": { "x_ratio": 0.95, "y_ratio": 0.5, "z_ratio": 0.9 },
+        "default_air_change_rate_ach": 0.5
+      }
+    },
+    "noble_gathering": {
+      "name": "贵族雅集",
+      "description": "贵族文人雅集场景，室内较小空间三盏灯布置",
+      "room_geometry": {
+        "room_size_x_m": 12.0,
+        "room_size_y_m": 10.0,
+        "room_size_z_m": 3.5
+      },
+      "grid_resolution": {
+        "nx": 6,
+        "ny": 5,
+        "nz": 5
+      },
+      "lamp_positions": [
+        { "lamp_type": "changxin_gongdeng", "x_m": 3.0, "y_m": 3.0, "z_m": 1.8 },
+        { "lamp_type": "changxin_gongdeng", "x_m": 9.0, "y_m": 3.0, "z_m": 1.8 },
+        { "lamp_type": "niu_deng", "x_m": 6.0, "y_m": 7.0, "z_m": 1.8 }
+      ],
+      "default_parameters": {
+        "base_pm25_ugm3": 40.0,
+        "air_change_rate_ach": 0.8,
+        "outdoor_pm25_ugm3": 30.0,
+        "ambient_temperature_c": 21.0,
+        "ambient_humidity_percent": 55.0,
+        "flue_temperature_c": 130.0,
+        "flue_velocity_ms": 0.35
+      },
+      "ventilation": {
+        "inlet_position": { "x_ratio": 0.1, "y_ratio": 0.5, "z_ratio": 0.9 },
+        "outlet_position": { "x_ratio": 0.9, "y_ratio": 0.5, "z_ratio": 0.9 },
+        "default_air_change_rate_ach": 0.8
+      }
+    }
+  }
+}

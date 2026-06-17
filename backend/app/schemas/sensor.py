@@ -14,6 +14,7 @@ class SensorDataCreate(BaseModel):
     ambient_humidity: Optional[float] = Field(None, description="环境湿度 %")
     blockage_degree: Optional[float] = Field(None, description="烟道堵塞程度")
     fuel_type: Optional[str] = Field(None, description="燃料类型: animal_fat, sesame_oil, beeswax, mineral_oil, tallow")
+    lamp_type: Optional[str] = Field(None, description="灯具类型: changxin_gongdeng, yanyu_deng, niu_deng")
     air_change_rate: Optional[float] = Field(None, ge=0, description="室内换气率 次/小时")
     outdoor_pm25: Optional[float] = Field(None, ge=0, description="室外PM2.5浓度 μg/m³")
     timestamp: Optional[int] = Field(None, description="Unix时间戳")
@@ -109,6 +110,15 @@ class LampResponse(BaseModel):
     location: Optional[str]
     description: Optional[str]
     created_at: datetime
+    lamp_type: Optional[str] = None
+    dynasty: Optional[str] = None
+    flue_length_m: Optional[float] = None
+    flue_diameter_m: Optional[float] = None
+    bend_count: Optional[int] = None
+    height_m: Optional[float] = None
+    weight_kg: Optional[float] = None
+    material: Optional[str] = None
+    base_purification_efficiency: Optional[float] = None
 
     class Config:
         from_attributes = True

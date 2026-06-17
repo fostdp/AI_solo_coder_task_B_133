@@ -16,10 +16,23 @@
   let currentAirQuality = null;
   let flameIntensity = 0.8;
   let blockageDegree = 0.0;
+  let currentLampType = "changxin_gongdeng";
+
+  const LAMP_TYPE_DESC = {
+    changxin_gongdeng: "长信宫灯(西汉)：采用宫女跪坐造型，双弯曲烟道结构，内部清水过滤烟尘，烟道可拆卸清洗，被誉为中华第一灯。",
+    yanyu_deng: "雁鱼灯(西汉)：鸿雁回首衔鱼造型，雁颈为S型烟道，鱼腹为灯罩，烟尘经雁颈导入雁腹水中，构思巧妙。",
+    niu_deng: "错银铜牛灯(东汉)：牛形灯座，双牛角为烟道通向牛腹盛水器，器身饰错银云纹，工艺精湛，净化效率更优。",
+  };
 
   function init() {
     setupEventListeners();
     startDataPolling();
+    if (typeof window.setFlameIntensity === "function") {
+      window.setFlameIntensity(flameIntensity);
+    }
+    if (typeof window.setBlockageVisual === "function") {
+      window.setBlockageVisual(blockageDegree);
+    }
   }
 
   function setupEventListeners() {
@@ -29,7 +42,9 @@
         tab.classList.add("active");
         const view = tab.dataset.view;
         GongDeng3D.switchView(view);
-        document.getElementById("pm25-legend").style.display = view === "pm25" ? "block" : "none";
+        const showLegend = view === "pm25" || view === "banquet_pm25";
+        const legend = document.getElementById("pm25-legend");
+        if (legend) legend.style.display = showLegend ? "block" : "none";
         if (view === "particles") {
           loadParticles();
         } else if (view === "pm25") {
@@ -37,6 +52,33 @@
         }
       });
     });
+
+    document.querySelectorAll("#compare-tabs .sub-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("#compare-tabs .sub-tab").forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        const sub = tab.dataset.subtab;
+        ["dynasty", "modern", "banquet"].forEach((k) => {
+          const panel = document.getElementById("subpanel-" + k);
+          if (panel) panel.classList.toggle("hidden", sub !== k);
+        });
+      });
+    });
+
+    const lampTypeSelect = document.getElementById("lamp-type-select");
+    if (lampTypeSelect) {
+      lampTypeSelect.addEventListener("change", (e) => {
+        currentLampType = e.target.value;
+        const desc = document.getElementById("lamp-type-desc");
+        if (desc && LAMP_TYPE_DESC[currentLampType]) {
+          desc.textContent = LAMP_TYPE_DESC[currentLampType];
+        }
+        if (typeof GongDeng3D.setCurrentLampType === "function") {
+          GongDeng3D.setCurrentLampType(currentLampType);
+        }
+        if (GongDeng3D.getCurrentView() === "particles") loadParticles();
+      });
+    }
 
     document.getElementById("fuel-select").addEventListener("change", (e) => {
       fuelType = e.target.value;
@@ -48,11 +90,17 @@
     document.getElementById("flame-slider").addEventListener("input", (e) => {
       flameIntensity = parseFloat(e.target.value);
       document.getElementById("flame-val").textContent = flameIntensity.toFixed(2);
+      if (typeof window.setFlameIntensity === "function") {
+        window.setFlameIntensity(flameIntensity);
+      }
     });
 
     document.getElementById("blockage-slider").addEventListener("input", (e) => {
       blockageDegree = parseFloat(e.target.value);
       document.getElementById("blockage-val").textContent = blockageDegree.toFixed(2);
+      if (typeof window.setBlockageVisual === "function") {
+        window.setBlockageVisual(blockageDegree);
+      }
     });
 
     document.getElementById("ach-slider").addEventListener("input", (e) => {
@@ -139,6 +187,7 @@
 
     const payload = {
       lamp_id: 1,
+      lamp_type: currentLampType,
       oil_consumption: oil,
       flue_temperature: temp,
       flue_velocity: velocity,
