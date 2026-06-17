@@ -18,6 +18,10 @@
   let blockageDegree = 0.0;
   let currentLampType = "changxin_gongdeng";
 
+  const GUIDE_KEY = "gongdeng_guide_completed";
+  let currentGuideStep = 1;
+  const TOTAL_GUIDE_STEPS = 6;
+
   const LAMP_TYPE_DESC = {
     changxin_gongdeng: "长信宫灯(西汉)：采用宫女跪坐造型，双弯曲烟道结构，内部清水过滤烟尘，烟道可拆卸清洗，被誉为中华第一灯。",
     yanyu_deng: "雁鱼灯(西汉)：鸿雁回首衔鱼造型，雁颈为S型烟道，鱼腹为灯罩，烟尘经雁颈导入雁腹水中，构思巧妙。",
@@ -26,6 +30,9 @@
 
   function init() {
     setupEventListeners();
+    setupGuideSystem();
+    setupTooltips();
+    setupSliderFeedback();
     startDataPolling();
     if (typeof window.setFlameIntensity === "function") {
       window.setFlameIntensity(flameIntensity);
@@ -33,6 +40,178 @@
     if (typeof window.setBlockageVisual === "function") {
       window.setBlockageVisual(blockageDegree);
     }
+  }
+
+  function setupSliderFeedback() {
+    updateFlameFeedback(flameIntensity);
+    updateBlockageFeedback(blockageDegree);
+  }
+
+  function updateFlameFeedback(val) {
+    const feedback = document.getElementById("flame-feedback");
+    if (!feedback) return;
+    if (val >= 0.6 && val <= 0.8) {
+      feedback.textContent = "推荐";
+      feedback.className = "slider-feedback good";
+    } else if (val > 0.8 && val <= 0.9) {
+      feedback.textContent = "较亮";
+      feedback.className = "slider-feedback warn";
+    } else if (val > 0.9) {
+      feedback.textContent = "烟雾大";
+      feedback.className = "slider-feedback bad";
+    } else if (val < 0.6 && val >= 0.3) {
+      feedback.textContent = "节能";
+      feedback.className = "slider-feedback good";
+    } else {
+      feedback.textContent = "昏暗";
+      feedback.className = "slider-feedback warn";
+    }
+  }
+
+  function updateBlockageFeedback(val) {
+    const feedback = document.getElementById("blockage-feedback");
+    if (!feedback) return;
+    if (val === 0) {
+      feedback.textContent = "通畅";
+      feedback.className = "slider-feedback good";
+    } else if (val > 0 && val <= 0.3) {
+      feedback.textContent = "轻微积灰";
+      feedback.className = "slider-feedback good";
+    } else if (val > 0.3 && val <= 0.6) {
+      feedback.textContent = "需要清洁";
+      feedback.className = "slider-feedback warn";
+    } else {
+      feedback.textContent = "严重堵塞";
+      feedback.className = "slider-feedback bad";
+    }
+  }
+
+  function setupTooltips() {
+    const tooltip = document.getElementById("global-tooltip");
+    if (!tooltip) return;
+
+    document.querySelectorAll(".info-icon").forEach((el) => {
+      el.addEventListener("mouseenter", (e) => {
+        const tip = el.getAttribute("data-tip") || "";
+        if (!tip) return;
+        tooltip.textContent = tip;
+        tooltip.classList.add("show");
+        const rect = el.getBoundingClientRect();
+        tooltip.style.left = (rect.left + rect.width + 10) + "px";
+        tooltip.style.top = (rect.top - 5) + "px";
+      });
+      el.addEventListener("mouseleave", () => {
+        tooltip.classList.remove("show");
+      });
+    });
+  }
+
+  function setupGuideSystem() {
+    const overlay = document.getElementById("guide-overlay");
+    const helpBtn = document.getElementById("help-btn");
+    if (!overlay || !helpBtn) return;
+
+    buildGuideProgress();
+
+    const hasCompleted = localStorage.getItem(GUIDE_KEY);
+    if (!hasCompleted) {
+      setTimeout(() => {
+        showGuide(1);
+      }, 800);
+    }
+
+    helpBtn.addEventListener("click", () => {
+      showGuide(1);
+    });
+
+    const prevBtn = document.getElementById("guide-prev");
+    const nextBtn = document.getElementById("guide-next");
+    const closeBtn = document.getElementById("guide-close");
+
+    if (prevBtn) {
+      prevBtn.addEventListener("click", () => {
+        if (currentGuideStep > 1) {
+          showGuide(currentGuideStep - 1);
+        }
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        if (currentGuideStep < TOTAL_GUIDE_STEPS) {
+          showGuide(currentGuideStep + 1);
+        }
+      });
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        hideGuide();
+        localStorage.setItem(GUIDE_KEY, "1");
+      });
+    }
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        hideGuide();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!overlay.classList.contains("active")) return;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
+        if (currentGuideStep < TOTAL_GUIDE_STEPS) showGuide(currentGuideStep + 1);
+        e.preventDefault();
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        if (currentGuideStep > 1) showGuide(currentGuideStep - 1);
+        e.preventDefault();
+      } else if (e.key === "Escape" || e.key === "Enter") {
+        hideGuide();
+        localStorage.setItem(GUIDE_KEY, "1");
+        e.preventDefault();
+      }
+    });
+  }
+
+  function buildGuideProgress() {
+    const progress = document.getElementById("guide-progress");
+    if (!progress) return;
+    progress.innerHTML = "";
+    for (let i = 1; i <= TOTAL_GUIDE_STEPS; i++) {
+      const dot = document.createElement("div");
+      dot.className = "guide-dot" + (i === 1 ? " active" : "");
+      dot.dataset.step = i;
+      progress.appendChild(dot);
+    }
+  }
+
+  function showGuide(step) {
+    const overlay = document.getElementById("guide-overlay");
+    const steps = document.querySelectorAll(".guide-step");
+    const dots = document.querySelectorAll(".guide-dot");
+    const prevBtn = document.getElementById("guide-prev");
+    const nextBtn = document.getElementById("guide-next");
+    const closeBtn = document.getElementById("guide-close");
+
+    if (!overlay) return;
+
+    currentGuideStep = step;
+    steps.forEach((s) => s.classList.remove("active"));
+    dots.forEach((d) => d.classList.remove("active"));
+
+    const activeStep = document.querySelector(`.guide-step[data-step="${step}"]`);
+    const activeDot = document.querySelector(`.guide-dot[data-step="${step}"]`);
+    if (activeStep) activeStep.classList.add("active");
+    if (activeDot) activeDot.classList.add("active");
+
+    if (prevBtn) prevBtn.disabled = step === 1;
+    if (nextBtn) nextBtn.style.display = step === TOTAL_GUIDE_STEPS ? "none" : "inline-block";
+    if (closeBtn) closeBtn.style.display = step === TOTAL_GUIDE_STEPS ? "inline-block" : "none";
+
+    overlay.classList.add("active");
+  }
+
+  function hideGuide() {
+    const overlay = document.getElementById("guide-overlay");
+    if (overlay) overlay.classList.remove("active");
   }
 
   function setupEventListeners() {
@@ -90,6 +269,7 @@
     document.getElementById("flame-slider").addEventListener("input", (e) => {
       flameIntensity = parseFloat(e.target.value);
       document.getElementById("flame-val").textContent = flameIntensity.toFixed(2);
+      updateFlameFeedback(flameIntensity);
       if (typeof window.setFlameIntensity === "function") {
         window.setFlameIntensity(flameIntensity);
       }
@@ -98,6 +278,7 @@
     document.getElementById("blockage-slider").addEventListener("input", (e) => {
       blockageDegree = parseFloat(e.target.value);
       document.getElementById("blockage-val").textContent = blockageDegree.toFixed(2);
+      updateBlockageFeedback(blockageDegree);
       if (typeof window.setBlockageVisual === "function") {
         window.setBlockageVisual(blockageDegree);
       }

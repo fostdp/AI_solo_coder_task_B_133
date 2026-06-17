@@ -485,6 +485,229 @@
             color: #e8c87a;
             margin: 8px 0 4px;
         }
+
+        .help-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6af, #4a8ff0);
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(100, 170, 255, 0.4);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .help-btn:hover { transform: scale(1.1); }
+
+        .guide-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .guide-overlay.active { display: flex; }
+        .guide-card {
+            background: linear-gradient(135deg, rgba(25, 35, 60, 0.98), rgba(15, 20, 40, 0.98));
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 12px;
+            padding: 28px 32px;
+            max-width: 520px;
+            width: 90%;
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .guide-card h2 {
+            color: #e8c87a;
+            font-size: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .guide-step {
+            display: none;
+        }
+        .guide-step.active { display: block; }
+        .guide-step h3 {
+            color: #6af;
+            font-size: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .guide-step h3 .step-num {
+            display: inline-flex;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(100, 170, 255, 0.2);
+            color: #6af;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .guide-step p {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #aab;
+            margin-bottom: 12px;
+        }
+        .guide-step ul {
+            margin: 8px 0 12px 20px;
+        }
+        .guide-step li {
+            font-size: 12px;
+            line-height: 1.8;
+            color: #9ab;
+            margin-bottom: 6px;
+        }
+        .guide-step .tip {
+            padding: 10px 14px;
+            background: rgba(100, 170, 255, 0.08);
+            border-left: 3px solid #6af;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #8bd;
+            margin: 10px 0;
+        }
+        .guide-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(100, 150, 255, 0.15);
+        }
+        .guide-progress {
+            display: flex;
+            gap: 6px;
+        }
+        .guide-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(100, 150, 255, 0.2);
+            transition: all 0.3s;
+        }
+        .guide-dot.active {
+            background: #6af;
+            width: 20px;
+            border-radius: 4px;
+        }
+        .guide-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .guide-btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .guide-btn-prev {
+            background: rgba(100, 150, 255, 0.15);
+            color: #8bd;
+            border: 1px solid rgba(100, 150, 255, 0.3);
+        }
+        .guide-btn-prev:hover { background: rgba(100, 150, 255, 0.25); }
+        .guide-btn-prev:disabled { opacity: 0.4; cursor: not-allowed; }
+        .guide-btn-next {
+            background: linear-gradient(135deg, #6af, #4a8ff0);
+            color: #fff;
+        }
+        .guide-btn-next:hover { transform: translateY(-1px); }
+        .guide-btn-close {
+            background: linear-gradient(135deg, #e8c87a, #d4a04a);
+            color: #1a1a2a;
+            font-weight: 600;
+        }
+        .guide-btn-close:hover { transform: translateY(-1px); }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 25, 45, 0.98);
+            border: 1px solid rgba(100, 150, 255, 0.4);
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.6;
+            max-width: 220px;
+            pointer-events: none;
+            z-index: 1500;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+        .tooltip.show { opacity: 1; }
+
+        .slider-feedback {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(100, 170, 255, 0.15);
+            color: #8bd;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 6px;
+            font-family: monospace;
+        }
+        .slider-feedback.good {
+            background: rgba(100, 200, 100, 0.15);
+            color: #8d8;
+        }
+        .slider-feedback.warn {
+            background: rgba(220, 180, 60, 0.15);
+            color: #dc8;
+        }
+        .slider-feedback.bad {
+            background: rgba(220, 80, 80, 0.15);
+            color: #d88;
+        }
+
+        .info-icon {
+            display: inline-flex;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(100, 170, 255, 0.2);
+            color: #6af;
+            font-size: 10px;
+            font-weight: bold;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+            margin-left: 4px;
+            border: 1px solid rgba(100, 170, 255, 0.4);
+        }
+        .info-icon:hover { background: rgba(100, 170, 255, 0.4); }
+
+        .feature-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            background: linear-gradient(135deg, rgba(232, 200, 122, 0.2), rgba(212, 160, 74, 0.2));
+            color: #e8c87a;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-right: 4px;
+            border: 1px solid rgba(232, 200, 122, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -666,11 +889,11 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label>火焰强度: <span id="flame-val">0.8</span></label>
+                    <label>火焰强度 <span class="info-icon" data-tip="调节灯油燃烧的剧烈程度，火焰越强，产生的烟雾越多，但烟道内流速越高，沉降效率也会提高。建议值0.6~0.8，兼顾亮度与环保。">?</span>: <span id="flame-val">0.80</span><span id="flame-feedback" class="slider-feedback good">推荐</span></label>
                     <input type="range" id="flame-slider" min="0.1" max="1.0" step="0.05" value="0.8">
                 </div>
                 <div class="control-group">
-                    <label>烟道堵塞度: <span id="blockage-val">0.0</span></label>
+                    <label>烟道堵塞度 <span class="info-icon" data-tip="模拟烟道长期使用后的烟灰堵塞情况。堵塞度越高，烟道内流速越慢，烟尘沉降效率下降，烟雾排放增加。请定期清洁烟道！">?</span>: <span id="blockage-val">0.00</span><span id="blockage-feedback" class="slider-feedback good">通畅</span></label>
                     <input type="range" id="blockage-slider" min="0" max="0.9" step="0.05" value="0">
                 </div>
                 <div class="control-group">
@@ -734,5 +957,93 @@
         if (typeof ComparisonUI !== 'undefined') ComparisonUI.init();
       });
     </script>
+
+    <button class="help-btn" id="help-btn" title="查看操作引导">?</button>
+
+    <div class="guide-overlay" id="guide-overlay">
+      <div class="guide-card">
+        <h2>🏮 长信宫灯互动体验指南</h2>
+
+        <div class="guide-step active" data-step="1">
+          <h3><span class="step-num">1</span> 认识三种古代环保灯</h3>
+          <p>两千多年前的汉代工匠就已掌握了空气净化的智慧。系统内置三款国家一级文物：</p>
+          <ul>
+            <li><span class="feature-tag">西汉</span><strong>长信宫灯</strong> — 中华第一灯，宫女右臂导烟</li>
+            <li><span class="feature-tag">西汉</span><strong>雁鱼灯</strong> — 鸿雁衔鱼造型，S型烟道更高效</li>
+            <li><span class="feature-tag">东汉</span><strong>错银铜牛灯</strong> — 双牛角烟道，错银工艺巅峰</li>
+          </ul>
+          <p class="tip">💡 在侧边栏"朝代环保灯"下拉中切换灯型，观察3D模型的变化！</p>
+        </div>
+
+        <div class="guide-step" data-step="2">
+          <h3><span class="step-num">2</span> 调节火焰，观察净化效果</h3>
+          <p>在"仿真控制"面板中，您可以：</p>
+          <ul>
+            <li><strong>火焰强度</strong> — 调节灯油燃烧剧烈程度。火焰越大，亮度越高，但烟雾也越多</li>
+            <li><strong>烟道堵塞度</strong> — 模拟长期使用后烟灰堵塞烟道的情况。堵塞越严重，净化效果越差</li>
+            <li><strong>燃料类型</strong> — 不同燃料的热值和烟雾特性不同</li>
+          </ul>
+          <p class="tip">💡 拖动滑块时，3D场景会实时响应！火焰大小、烟雾透明度都会变化。</p>
+        </div>
+
+        <div class="guide-step" data-step="3">
+          <h3><span class="step-num">3</span> 朝代对比：古代的空气净化竞赛</h3>
+          <p>进入"朝代对比"页面，运行三种灯在相同工况下的CFD仿真对比：</p>
+          <ul>
+            <li>观察烟道几何差异对净化效率的影响</li>
+            <li>对比沉降效率、流阻、温度分布等15项参数</li>
+            <li>从流体力学角度理解汉代工匠的设计智慧</li>
+          </ul>
+          <p class="tip">💡 点击顶部"朝代对比"视图，可以同时看到三盏灯的3D模型并列展示！</p>
+        </div>
+
+        <div class="guide-step" data-step="4">
+          <h3><span class="step-num">4</span> 跨时空对话：汉代 vs 现代</h3>
+          <p>运行"古今对比"，看看2000年前的环保设计与现代HEPA净化器的PK：</p>
+          <ul>
+            <li><strong>7个维度</strong>全方位对比：净化效率、能耗、噪音、环保、艺术、历史等</li>
+            <li>古代环保灯在静音、零能耗、艺术价值上全面胜出</li>
+            <li>现代净化器在绝对净化效率、覆盖面积上技术领先</li>
+          </ul>
+          <p class="tip">💡 这不是"谁更好"的比较，而是一场跨越两千年的环保理念对话！</p>
+        </div>
+
+        <div class="guide-step" data-step="5">
+          <h3><span class="step-num">5</span> 宴会协同：汉代皇室如何保持空气清新</h3>
+          <p>大型宴会人员密集，多盏宫灯如何协同工作？</p>
+          <ul>
+            <li>预设<strong>皇室宴会</strong>（20×15m大殿，5盏灯）和<strong>贵族雅集</strong>（12×10m，3盏灯）场景</li>
+            <li>仿真多灯协同净化效果，观察PM2.5浓度云图分布</li>
+            <li>理解"净化半径叠加"和"最强净化取min"的算法原理</li>
+          </ul>
+          <p class="tip">💡 点击"宴会场景"视图，进入沉浸式3D宴会空间！</p>
+        </div>
+
+        <div class="guide-step" data-step="6">
+          <h3><span class="step-num">6</span> 探索更多视图</h3>
+          <p>系统提供5种视图模式，随时切换：</p>
+          <ul>
+            <li><strong>宫灯3D</strong> — 欣赏单灯细节，可鼠标拖拽旋转</li>
+            <li><strong>烟气流线</strong> — 观察烟道内烟雾粒子运动轨迹</li>
+            <li><strong>PM2.5云图</strong> — 三维空间浓度分布可视化</li>
+            <li><strong>朝代对比</strong> — 三灯并列，直观对比造型差异</li>
+            <li><strong>宴会场景</strong> — 沉浸式多灯协同净化空间</li>
+          </ul>
+          <p class="tip">🎉 现在开始您的古代环保科技探索之旅吧！有任何疑问，随时点击右下角的"?"按钮重新查看引导。</p>
+        </div>
+
+        <div class="guide-controls">
+          <div class="guide-progress" id="guide-progress"></div>
+          <div class="guide-btns">
+            <button class="guide-btn guide-btn-prev" id="guide-prev" disabled>上一步</button>
+            <button class="guide-btn guide-btn-next" id="guide-next">下一步</button>
+            <button class="guide-btn guide-btn-close" id="guide-close" style="display:none;">开始探索</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tooltip" id="global-tooltip"></div>
+
 </body>
 </html>

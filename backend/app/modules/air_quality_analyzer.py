@@ -567,8 +567,40 @@ class AirQualityAnalyzer:
         self,
         base_pm25: float,
         lamp_emissions: List[float],
+        sigma_multiplier: Optional[float] = None,
+        debug_log: bool = False,
     ) -> np.ndarray:
-        """多灯源初始化浓度场：每个灯位置叠加高斯源"""
+        """多灯源初始化浓度场 — 文档化版本
+
+        算法概要:
+            每个宫灯作为独立的PM2.5排放源，以该灯的位置为中心叠加三维高斯分布。
+            由于宫灯的燃烧特性，排放的颗粒物在初始时会在灯附近形成局部高浓度区。
+
+        数学公式:
+            C(i,j,k) = C_base + Σ_n [ S_n × σ_n × exp(-d² / 2σ²) ]
+            其中:
+              - C_base: 房间本底PM2.5浓度
+              - S_n: 第n盏灯的排放源强度 (常量)
+              - σ_n: 第n盏灯的扩散半径 (= local_purification_radius_m)
+              - d: 格点(i,j,k)到灯n的网格距离
+
+        坐标系变换:
+            灯的输入位置为物理坐标 (x_m, y_m, z_m)，需要转换为网格索引:
+              grid_i = round(x_m / room_size_x × (nx-1))
+              grid_j = round(y_m / room_size_y × (ny-1))
+              grid_k = round(z_m / room_size_z × (nz-1))
+
+        Args:
+            base_pm25: 房间本底PM2.5浓度 (μg/m³)
+            lamp_emissions: 各灯的排放速率 (μg/min)，与lamp_positions一一对应
+            sigma_multiplier: 可选，覆盖默认的高斯源扩散系数乘数
+            debug_log: 是否输出调试日志
+
+        Returns:
+            C: 初始化后的浓度场 (nx, ny, nz)
+        """
+        logger = logging.getLogger(self.__class__.__name__)
+
         C = np.full((self.nx, self.ny, self.nz), float(base_pm25), dtype=np.float64)
         positions = getattr(self, "multi_lamp_positions", None) or [self.lamp_pos]
         lamp_types = getattr(self, "multi_lamp_types", None) or ["changxin_gongdeng"]
@@ -576,17 +608,32 @@ class AirQualityAnalyzer:
         try:
             dynasty_cfg = load_dynasty_lamps_config()
             lamps_db = dynasty_cfg.get("dynasty_lamps", {})
+            banquet_cfg = load_banquet_scenes_config()
+            algo_cfg = banquet_cfg.get("algorithm_parameters", {})
+            if sigma_multiplier is None:
+                sigma_multiplier = algo_cfg.get("emission_source_sigma_multiplier", 1.0)
         except Exception:
             lamps_db = {}
+            sigma_multiplier = sigma_multiplier or 1.0
+
+        if debug_log:
+            logger.info(
+                f"[MultiLampInit] 初始化浓度场: base={base_pm25}, "
+                f"num_lamps={len(positions)}, sigma_mult={sigma_multiplier}, "
+                f"grid=({self.nx},{self.ny},{self.nz})"
+            )
 
         for idx, lamp_pos in enumerate(positions):
             emission = lamp_emissions[idx] if idx < len(lamp_emissions) else 0.0
             if emission <= 0:
+                if debug_log:
+                    logger.info(f"  [Lamp {idx+1}] 排放为0，跳过")
                 continue
+
             lamp_type = lamp_types[idx] if idx < len(lamp_types) else "changxin_gongdeng"
             lamp_cfg = lamps_db.get(lamp_type, {})
             purif_cfg = lamp_cfg.get("purification_characteristics", {})
-            sigma = purif_cfg.get("local_purification_radius_m", self.lamp_sigma)
+            sigma = purif_cfg.get("local_purification_radius_m", self.lamp_sigma) * sigma_multiplier
             src_strength = self.lamp_src_strength
 
             lamp_gx = int(round(lamp_pos[0] / self.room_size_x * (self.nx - 1)))
@@ -595,13 +642,29 @@ class AirQualityAnalyzer:
             lamp_gx = int(np.clip(lamp_gx, 0, self.nx - 1))
             lamp_gy = int(np.clip(lamp_gy, 0, self.ny - 1))
             lamp_gz = int(np.clip(lamp_gz, 0, self.nz - 1))
+
             sigma_sq = (sigma / max(self.room_size_x, 1)) ** 2 * self.nx ** 2
+
+            if debug_log:
+                logger.info(
+                    f"  [Lamp {idx+1}] type={lamp_type}, "
+                    f"grid=({lamp_gx},{lamp_gy},{lamp_gz}), "
+                    f"sigma={sigma:.2f}m, emission={emission:.2f}"
+                )
+
             for i in range(self.nx):
                 for j in range(self.ny):
                     for k in range(self.nz):
                         dist_sq = (i - lamp_gx) ** 2 + (j - lamp_gy) ** 2 + (k - lamp_gz) ** 2
                         gauss = np.exp(-dist_sq / (2 * sigma_sq + 1e-12))
                         C[i, j, k] += src_strength * emission * gauss
+
+        if debug_log:
+            logger.info(
+                f"[MultiLampInit] 完成: avg={np.mean(C):.3f}, "
+                f"max={np.max(C):.3f}, min={np.min(C):.3f}"
+            )
+
         return C
 
     def apply_multi_lamp_purification(
@@ -609,8 +672,61 @@ class AirQualityAnalyzer:
         field: np.ndarray,
         settling_efficiencies: List[float],
         flue_velocities: List[float],
+        overlap_strategy: Optional[str] = None,
+        debug_log: bool = False,
     ) -> Tuple[np.ndarray, float, Dict[str, Any]]:
-        """多灯协同净化：每个灯在其净化半径内独立净化，叠加效果取最强衰减"""
+        """多灯协同净化算法 — 完整文档化版本
+
+        算法概要:
+        ---------
+        宴会场景中，多盏宫灯在房间不同位置同时工作，每盏灯在其局部净化半径内独立地
+        对空气中的PM2.5进行沉降和过滤。本方法实现了多灯净化效果的叠加计算。
+
+        核心思想 (MIN策略 - 默认):
+            对于任意一个空间格点 (i,j,k):
+              1. 计算该点到每盏灯的世界坐标距离
+              2. 如果距离在该灯的净化半径内，计算该灯对该点的净化效率
+              3. 各灯净化效率与距离成反比，服从衰减函数：(1 - r/R)^decay
+              4. 对于同一格点被多盏灯覆盖的区域，取 ALL CANDIDATES 中的最低浓度
+                 (即最强净化效果，因为这是各灯共同作用的最优结果)
+
+        叠加策略可选项 (overlap_strategy):
+            "min"  - 最强净化：取所有可达该格点的灯中最低浓度（默认，乐观估计）
+            "max"  - 最弱净化：取所有可达该格点的灯中最高浓度（悲观估计）
+            "mean" - 平均净化：取所有可达该格点的灯的浓度平均值
+            "sum"  - 线性叠加：对净化效率进行线性求和（注意：可能超理论上限）
+
+        单灯净化效率计算公式:
+            η_local(r) = strength × η_total × (1 - r/R)^decay
+            其中:
+              - η_total = base_purif × (w_settle × settling_factor + w_vel × velocity_factor)
+              - settling_factor = settling_efficiency / min_settle   (归一化沉降贡献)
+              - velocity_factor = flue_velocity / min_vel             (归一化流速贡献)
+              - w_settle + w_vel = 1.0
+              - r = 格点到灯的世界距离
+              - R = 该灯的局部净化半径 (m)
+              - decay = 衰减指数 (默认2.0，平方反比衰减)
+
+        参数来源:
+            每个灯的 base_purif, w_settle, w_vel, R, strength 均从
+            config/dynasty_lamps.json 中对应 lamp_type 的 purification_characteristics
+            读取；算法参数 decay, overlap_strategy 从 config/banquet_scenes.json 的
+            algorithm_parameters 读取。
+
+        Args:
+            field: 3D numpy array (nx, ny, nz)，扩散后的初始浓度场
+            settling_efficiencies: 各灯的CFD沉降效率列表，与lamp_positions一一对应
+            flue_velocities: 各灯的烟道出口流速列表，与lamp_positions一一对应
+            overlap_strategy: 可选，覆盖默认的叠加策略("min"/"max"/"mean"/"sum")
+            debug_log: 是否输出详细调试日志（默认False）
+
+        Returns:
+            purified: 净化后的浓度场
+            purification_rate: 整体净化率 (C_before - C_after) / C_before
+            details: 详细信息字典，包含每灯净化参数、前后浓度、策略等
+        """
+        logger = logging.getLogger(self.__class__.__name__)
+
         before = float(np.mean(field))
         positions = getattr(self, "multi_lamp_positions", None) or [self.lamp_pos]
         lamp_types = getattr(self, "multi_lamp_types", None) or ["changxin_gongdeng"]
@@ -618,11 +734,28 @@ class AirQualityAnalyzer:
         try:
             dynasty_cfg = load_dynasty_lamps_config()
             lamps_db = dynasty_cfg.get("dynasty_lamps", {})
+            banquet_cfg = load_banquet_scenes_config()
+            algo_cfg = banquet_cfg.get("algorithm_parameters", {})
         except Exception:
             lamps_db = {}
+            algo_cfg = {}
+
+        if overlap_strategy is None:
+            overlap_strategy = algo_cfg.get("overlap_strategy", "min")
+        decay_exp = algo_cfg.get("purification_falloff_exponent", self.decay_exp)
+        sigma_mult = algo_cfg.get("emission_source_sigma_multiplier", 1.0)
+        grid_origin = algo_cfg.get("grid_to_world_origin", "center")
+
+        if debug_log:
+            logger.info(
+                f"[MultiLampPurify] 开始多灯净化: num_lamps={len(positions)}, "
+                f"strategy={overlap_strategy}, decay={decay_exp}, "
+                f"grid_shape={field.shape}, before_avg={before:.3f}"
+            )
 
         purified = field.copy()
         per_lamp_details = []
+        per_lamp_contributions = []
 
         for idx, lamp_pos in enumerate(positions):
             lamp_type = lamp_types[idx] if idx < len(lamp_types) else "changxin_gongdeng"
@@ -634,19 +767,40 @@ class AirQualityAnalyzer:
             w_vel = purif_cfg.get("velocity_weight", self.w_vel)
             radius = purif_cfg.get("local_purification_radius_m", self.purif_radius)
             strength = purif_cfg.get("local_purification_strength", self.purif_strength)
-            decay = self.decay_exp
 
             settle_eff = settling_efficiencies[idx] if idx < len(settling_efficiencies) else 0.0
             flue_vel = flue_velocities[idx] if idx < len(flue_velocities) else 0.0
+
             settling_factor = min(max(settle_eff / max(self.min_settle, 1e-9), 0.0), 1.0)
             velocity_factor = min(max(flue_vel / max(self.min_vel, 1e-9), 0.0), 1.0)
+
             purification_efficiency = base_purif * (
                 w_settle * settling_factor + w_vel * velocity_factor
             )
 
-            lamp_world_x = lamp_pos[0] - self.room_size_x / 2
-            lamp_world_y = lamp_pos[1] - self.room_size_y / 2
+            if grid_origin == "center":
+                lamp_world_x = lamp_pos[0] - self.room_size_x / 2
+                lamp_world_y = lamp_pos[1] - self.room_size_y / 2
+            else:
+                lamp_world_x = lamp_pos[0]
+                lamp_world_y = lamp_pos[1]
             lamp_world_z = lamp_pos[2]
+
+            lamp_grid_x = int(round(lamp_pos[0] / self.room_size_x * (self.nx - 1)))
+            lamp_grid_y = int(round(lamp_pos[1] / self.room_size_y * (self.ny - 1)))
+            lamp_grid_z = int(round(lamp_pos[2] / self.room_size_z * (self.nz - 1)))
+
+            if debug_log:
+                logger.info(
+                    f"  [Lamp {idx+1}] type={lamp_type}, "
+                    f"pos_grid=({lamp_grid_x},{lamp_grid_y},{lamp_grid_z}), "
+                    f"pos_world=({lamp_world_x:.2f},{lamp_world_y:.2f},{lamp_world_z:.2f}), "
+                    f"radius={radius}m, eta_total={purification_efficiency:.4f}, "
+                    f"settle_factor={settling_factor:.3f}, vel_factor={velocity_factor:.3f}"
+                )
+
+            lamp_candidate = field.copy()
+            cells_affected = 0
 
             for i in range(self.nx):
                 for j in range(self.ny):
@@ -658,28 +812,68 @@ class AirQualityAnalyzer:
                             + (wz - lamp_world_z) ** 2
                         )
                         if dist <= radius:
-                            falloff = (1 - dist / radius) ** decay
+                            cells_affected += 1
+                            falloff = (1 - dist / radius) ** decay_exp
                             local_eff = strength * purification_efficiency * falloff
-                            candidate = field[i, j, k] * (1 - local_eff)
-                            if candidate < purified[i, j, k]:
-                                purified[i, j, k] = candidate
+                            lamp_candidate[i, j, k] = field[i, j, k] * (1 - local_eff)
+                        else:
+                            lamp_candidate[i, j, k] = field[i, j, k]
+
+            per_lamp_contributions.append(lamp_candidate)
 
             per_lamp_details.append({
                 "lamp_index": idx,
                 "lamp_type": lamp_type,
-                "purification_efficiency": purification_efficiency,
-                "settling_factor": settling_factor,
-                "velocity_factor": velocity_factor,
-                "radius_m": radius,
+                "lamp_position_m": [float(lamp_pos[0]), float(lamp_pos[1]), float(lamp_pos[2])],
+                "lamp_grid": [lamp_grid_x, lamp_grid_y, lamp_grid_z],
+                "purification_efficiency": float(purification_efficiency),
+                "base_purification_efficiency": float(base_purif),
+                "settling_factor": float(settling_factor),
+                "velocity_factor": float(velocity_factor),
+                "radius_m": float(radius),
+                "purification_strength": float(strength),
+                "falloff_exponent": float(decay_exp),
+                "cells_affected": int(cells_affected),
+                "avg_after_purification": float(np.mean(lamp_candidate)),
             })
+
+        if debug_log:
+            logger.info(f"  各灯净化完成，开始叠加策略: {overlap_strategy}")
+
+        stacked = np.stack(per_lamp_contributions, axis=0)
+        if overlap_strategy == "min":
+            purified = np.min(stacked, axis=0)
+        elif overlap_strategy == "max":
+            purified = np.max(stacked, axis=0)
+        elif overlap_strategy == "mean":
+            purified = np.mean(stacked, axis=0)
+        elif overlap_strategy == "sum":
+            eff_sum = np.zeros_like(field)
+            for cand in per_lamp_contributions:
+                eff_sum += (field - cand)
+            purified = np.maximum(field - eff_sum, 0.0)
+        else:
+            logger.warning(f"未知叠加策略 {overlap_strategy}，使用默认 min")
+            purified = np.min(stacked, axis=0)
 
         after = float(np.mean(purified))
         purification_rate = max(0.0, (before - after) / max(before, 1e-9))
+
+        if debug_log:
+            logger.info(
+                f"[MultiLampPurify] 完成: strategy={overlap_strategy}, "
+                f"before={before:.3f}, after={after:.3f}, "
+                f"rate={purification_rate:.4f}, improvement={before-after:.3f}"
+            )
+
         details = {
-            "avg_before": before,
-            "avg_after": after,
-            "purification_rate": purification_rate,
-            "num_lamps": len(positions),
+            "avg_before": float(before),
+            "avg_after": float(after),
+            "purification_rate": float(purification_rate),
+            "num_lamps": int(len(positions)),
+            "overlap_strategy": overlap_strategy,
+            "falloff_exponent": float(decay_exp),
+            "grid_origin": grid_origin,
             "per_lamp": per_lamp_details,
         }
         return purified, purification_rate, details
@@ -695,8 +889,34 @@ class AirQualityAnalyzer:
         ambient_humidity: float = 50.0,
         air_change_rate: Optional[float] = None,
         outdoor_pm25: Optional[float] = None,
+        overlap_strategy: Optional[str] = None,
+        debug_log: bool = False,
     ) -> Tuple[Dict[str, Any], np.ndarray]:
-        """多灯宴会场景综合分析"""
+        """多灯宴会场景综合分析 — 完整管线
+        执行完整的宴会场景空气质量仿真：
+            1. 参数准备（通风、扩散系数）
+            2. 多灯排放源初始化（高斯叠加）
+            3. 对流扩散方程求解（显式Euler + 7点差分）
+            4. 多灯协同净化（支持4种叠加策略）
+            5. 统计指标与AQI评估
+
+        Args:
+            base_pm25: 房间本底PM2.5浓度 (μg/m³)
+            lamp_emissions_ug: 各灯PM2.5排放速率列表 (μg/min)
+            settling_efficiencies: 各灯CFD沉降效率列表
+            flue_velocities: 各灯烟道出口流速列表 (m/s)
+            flue_temperatures: 可选，各灯烟道出口温度列表 (°C)
+            ambient_temperature: 环境温度 (°C)
+            ambient_humidity: 环境相对湿度 (%)
+            air_change_rate: 可选，覆盖默认的通风换气次数 (次/小时)
+            outdoor_pm25: 可选，室外PM2.5浓度 (μg/m³)
+            overlap_strategy: 可选，多灯净化叠加策略
+            debug_log: 是否输出调试日志
+
+        Returns:
+            result: 综合结果字典（净化率、AQI、梯度等）
+            purified: 最终浓度场三维网格
+        """
         if air_change_rate is not None:
             self.air_change_rate = air_change_rate
             self._velocity_field = self._calculate_velocity_field()
@@ -704,10 +924,11 @@ class AirQualityAnalyzer:
             self.outdoor_pm25 = outdoor_pm25
 
         D = self.calculate_diffusion_coefficient(ambient_temperature, ambient_humidity)
-        initial = self.initialize_multi_lamp_field(base_pm25, lamp_emissions_ug)
+        initial = self.initialize_multi_lamp_field(base_pm25, lamp_emissions_ug, debug_log=debug_log)
         diffused = self.solve_diffusion(initial, D, ambient_temperature)
         purified, purification_rate, details = self.apply_multi_lamp_purification(
-            diffused, settling_efficiencies, flue_velocities
+            diffused, settling_efficiencies, flue_velocities,
+            overlap_strategy=overlap_strategy, debug_log=debug_log
         )
         avg_conc = float(np.mean(purified))
         gx, gy, gz = np.gradient(purified)

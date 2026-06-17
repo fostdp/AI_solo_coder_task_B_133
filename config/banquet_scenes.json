@@ -1,6 +1,18 @@
 {
   "_comment": "多灯宴会场景配置 - 汉代宴会多盏宫灯协同净化场景",
   "default_scene": "royal_banquet",
+  "algorithm_parameters": {
+    "overlap_strategy": "min",
+    "overlap_strategy_description": "多灯净化叠加策略：min(取最强净化) / max(取最弱) / mean(平均) / sum(叠加线性)",
+    "purification_falloff_exponent": 2.0,
+    "purification_falloff_description": "距离衰减指数：1.0=线性，2.0=平方反比，值越高边缘衰减越快",
+    "emission_source_sigma_multiplier": 1.0,
+    "emission_source_sigma_description": "高斯源扩散系数乘数，控制初始烟雾扩散速度",
+    "min_meaningful_purification": 0.01,
+    "min_meaningful_purification_description": "最小有效净化率阈值，低于此视为无净化效果",
+    "grid_to_world_origin": "center",
+    "grid_to_world_origin_description": "世界坐标原点：center(房间中心为原点) / corner(房间左下角为原点)"
+  },
   "scenes": {
     "royal_banquet": {
       "name": "皇室宴会",
